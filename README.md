@@ -5,7 +5,7 @@
 > explains the direct impact of every choice.
 
 **Challenge:** PromptWars Virtual — Challenge 6: Urban Air Quality Assistant
-**Live demo:** _TBD_ · **Demo video:** _TBD_
+**Live demo:** https://airwise-cuu3.onrender.com (free hosting: the first visit after a quiet period can take up to a minute to wake up) · **Demo video:** _TBD_
 
 ---
 

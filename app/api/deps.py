@@ -16,6 +16,7 @@ from app.services.plan_builder import PlanBuilder
 AIR_CACHE_SIZE = 512
 GEO_CACHE_SIZE = 1024
 GEO_CACHE_TTL_SECONDS = 24 * 3600
+AI_CACHE_SIZE = 256
 
 
 @dataclass(frozen=True)
@@ -34,7 +35,7 @@ def build_services(settings: Settings, http: AsyncClient) -> Services:
     generator: TextGenerator | None = None
     if settings.has_gemini_key and settings.gemini_api_key is not None:
         generator = GeminiGenerator(
-            settings.gemini_api_key.get_secret_value(), settings.gemini_model
+            settings.gemini_api_key.get_secret_value(), settings.gemini_models
         )
 
     air = AirQualityClient(http, TTLCache(maxsize=AIR_CACHE_SIZE, ttl=settings.cache_ttl_seconds))
@@ -44,7 +45,11 @@ def build_services(settings: Settings, http: AsyncClient) -> Services:
         reverse_geocoder=ReverseGeocodingClient(
             http, TTLCache(maxsize=GEO_CACHE_SIZE, ttl=GEO_CACHE_TTL_SECONDS)
         ),
-        plans=PlanBuilder(air, generator),
+        plans=PlanBuilder(
+            air,
+            generator,
+            ai_cache=TTLCache(maxsize=AI_CACHE_SIZE, ttl=settings.ai_cache_ttl_seconds),
+        ),
         chat=ChatService(generator),
     )
 

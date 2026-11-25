@@ -1,7 +1,9 @@
-"""Gemini wrapper: one place for timeouts, error mapping and output validation."""
+"""Gemini wrapper: one place for timeouts, model fallback, error mapping and output validation."""
 
 import asyncio
+import logging
 import re
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from google import genai
@@ -10,14 +12,19 @@ from pydantic import BaseModel, Field, ValidationError
 
 from app.core.errors import AIUnavailableError
 
+logger = logging.getLogger(__name__)
+
 API_VERSION = "v1beta"
-REQUEST_TIMEOUT_SECONDS = 15.0
+# Per model attempt; with one fallback the worst case stays under the 30 s browser timeout.
+REQUEST_TIMEOUT_SECONDS = 10.0
 PLAN_TEMPERATURE = 0.4
 CHAT_TEMPERATURE = 0.6
 PLAN_MAX_TOKENS = 2048
 CHAT_MAX_TOKENS = 400
-# Rewording needs no reasoning; thinking tokens would also eat the output budget.
-NO_THINKING = types.ThinkingConfig(thinking_budget=0)
+# Rewording needs little reasoning, and thinking tokens would eat the output budget.
+# Gemini 2.x takes a token budget (0 = off); Gemini 3.x takes a level instead.
+NO_THINKING_V2 = types.ThinkingConfig(thinking_budget=0)
+LOW_THINKING_V3 = types.ThinkingConfig(thinking_level="low")
 
 # Markdown that must not appear in plain-text plan fields: (pattern, replacement), applied in order.
 _MARKDOWN_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
@@ -57,52 +64,85 @@ class TextGenerator(Protocol):
         ...
 
 
-class GeminiGenerator:
-    """TextGenerator backed by the Gemini API."""
+def thinking_config_for(model: str) -> types.ThinkingConfig:
+    """Return the lightest thinking setting the model family accepts."""
+    return NO_THINKING_V2 if model.startswith("gemini-2.") else LOW_THINKING_V3
 
-    def __init__(self, api_key: str, model: str) -> None:
-        """Create a generator for the given model."""
+
+ConfigFactory = Callable[[str], types.GenerateContentConfig]
+
+
+class GeminiGenerator:
+    """TextGenerator backed by the Gemini API, trying each model in order until one answers.
+
+    A later model is used only when an earlier one fails (quota used up, overloaded,
+    retired or timed out), so a free-tier limit on one model doesn't switch the AI off.
+    """
+
+    def __init__(self, api_key: str, models: Sequence[str]) -> None:
+        """Create a generator.
+
+        Args:
+            api_key: Gemini API key.
+            models: Model names in order of preference (at least one).
+
+        Raises:
+            ValueError: If no model is given.
+        """
+        if not models:
+            raise ValueError("At least one Gemini model is required")
         # System instructions and JSON schemas need the v1beta API (v1 rejects them).
         self._client = genai.Client(
             api_key=api_key, http_options=types.HttpOptions(api_version=API_VERSION)
         )
-        self._model = model
+        self._models = tuple(models)
 
     async def generate_plan(self, system: str, prompt: str) -> str:
         """Generate structured plan JSON."""
-        config = types.GenerateContentConfig(
-            system_instruction=system,
-            temperature=PLAN_TEMPERATURE,
-            max_output_tokens=PLAN_MAX_TOKENS,
-            response_mime_type="application/json",
-            response_schema=AiPlanText,
-            thinking_config=NO_THINKING,
-        )
+
+        def config(model: str) -> types.GenerateContentConfig:
+            return types.GenerateContentConfig(
+                system_instruction=system,
+                temperature=PLAN_TEMPERATURE,
+                max_output_tokens=PLAN_MAX_TOKENS,
+                response_mime_type="application/json",
+                response_schema=AiPlanText,
+                thinking_config=thinking_config_for(model),
+            )
+
         return await self._generate(prompt, config)
 
     async def generate_chat(self, system: str, prompt: str) -> str:
         """Generate a short chat reply."""
-        config = types.GenerateContentConfig(
-            system_instruction=system,
-            temperature=CHAT_TEMPERATURE,
-            max_output_tokens=CHAT_MAX_TOKENS,
-            thinking_config=NO_THINKING,
-        )
+
+        def config(model: str) -> types.GenerateContentConfig:
+            return types.GenerateContentConfig(
+                system_instruction=system,
+                temperature=CHAT_TEMPERATURE,
+                max_output_tokens=CHAT_MAX_TOKENS,
+                thinking_config=thinking_config_for(model),
+            )
+
         return await self._generate(prompt, config)
 
-    async def _generate(self, prompt: str, config: types.GenerateContentConfig) -> str:
-        try:
-            response = await asyncio.wait_for(
-                self._client.aio.models.generate_content(
-                    model=self._model, contents=prompt, config=config
-                ),
-                timeout=REQUEST_TIMEOUT_SECONDS,
-            )
-        except Exception as exc:  # SDK raises many error types; all mean "AI unavailable"
-            raise AIUnavailableError("Gemini request failed") from exc
-        if not response.text:
-            raise AIUnavailableError("Gemini returned an empty response")
-        return response.text
+    async def _generate(self, prompt: str, config_for: ConfigFactory) -> str:
+        last_error: Exception | None = None
+        for model in self._models:
+            try:
+                response = await asyncio.wait_for(
+                    self._client.aio.models.generate_content(
+                        model=model, contents=prompt, config=config_for(model)
+                    ),
+                    timeout=REQUEST_TIMEOUT_SECONDS,
+                )
+            except Exception as exc:  # SDK raises many error types; all mean "try the next one"
+                logger.warning("Gemini model %s failed: %s", model, type(exc).__name__)
+                last_error = exc
+                continue
+            if response.text:
+                return response.text
+            logger.warning("Gemini model %s returned an empty response", model)
+        raise AIUnavailableError("All Gemini models failed") from last_error
 
 
 def contains_impact_figure(text: str) -> bool:

@@ -19,12 +19,13 @@ while still delivering a smart, conversational assistant.
 
 | Setting | Value |
 |---|---|
-| Model | `GEMINI_MODEL` env var (default: current Gemini Flash model) |
+| Model | `GEMINI_MODEL` (default `gemini-3.5-flash-lite`), then `GEMINI_FALLBACK_MODELS` in order if a model fails (quota used up, overloaded, retired, timeout) |
+| Cache | Identical plan prompts reuse the validated AI wording for `AI_CACHE_TTL_SECONDS` (1 h) to save free-tier quota |
 | SDK | `google-genai`, API version `v1beta` (needed for system instructions and JSON schemas) |
-| Thinking | Off (`thinking_budget=0`): rewording needs no reasoning, and thinking tokens would eat the output budget |
+| Thinking | Minimal: `thinking_budget=0` for Gemini 2.x, `thinking_level=low` for Gemini 3.x. Rewording needs little reasoning, and thinking tokens would eat the output budget |
 | Temperature | 0.4 (plan), 0.6 (chat) |
 | Max output tokens | 2048 (plan), 400 (chat) |
-| Timeout | 15 s |
+| Timeout | 10 s per model attempt |
 | Output format | JSON with `response_schema` (plan); plain text (chat) |
 | Calls per plan | 1 |
 

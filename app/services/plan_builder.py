@@ -1,9 +1,12 @@
 """Orchestrates a plan: air data -> rules engine -> AI wording -> merged plan."""
 
+import hashlib
 import logging
 from collections.abc import Callable
 from datetime import datetime, tzinfo
 from typing import Any
+
+from cachetools import TTLCache
 
 from app.core.errors import AIUnavailableError
 from app.models.plan import Location, Plan, PlanSource, Recommendation
@@ -39,6 +42,7 @@ class PlanBuilder:
         air: AirQualityClient,
         generator: TextGenerator | None,
         clock: Clock = _system_clock,
+        ai_cache: TTLCache[str, AiPlanText] | None = None,
     ) -> None:
         """Create a builder.
 
@@ -46,10 +50,12 @@ class PlanBuilder:
             air: Air quality client.
             generator: AI text generator, or None to always use rule-based wording.
             clock: Returns the current time in a timezone (injectable for tests).
+            ai_cache: Reuses AI wording for identical prompts (saves AI quota), or None.
         """
         self._air = air
         self._generator = generator
         self._clock = clock
+        self._ai_cache = ai_cache
 
     async def build(self, profile: UserProfile) -> Plan:
         """Return the plan. AI failures fall back to rule-based wording.
@@ -93,13 +99,18 @@ class PlanBuilder:
             generated_at=now,
         )
 
-    @staticmethod
     async def _ai_text(
-        generator: TextGenerator, ctx: RuleContext, recs: list[Recommendation]
+        self, generator: TextGenerator, ctx: RuleContext, recs: list[Recommendation]
     ) -> AiPlanText:
         prompt = build_plan_prompt(ai_payload(ctx, recs))
+        key = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+        if self._ai_cache is not None and (cached := self._ai_cache.get(key)) is not None:
+            return cached
         raw = await generator.generate_plan(PLAN_SYSTEM_PROMPT_V2, prompt)
-        return parse_plan_text(raw, {rec.id for rec in recs})
+        text = parse_plan_text(raw, {rec.id for rec in recs})
+        if self._ai_cache is not None:
+            self._ai_cache[key] = text
+        return text
 
 
 def location_name(profile: UserProfile) -> str:

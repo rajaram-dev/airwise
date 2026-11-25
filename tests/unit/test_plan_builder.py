@@ -51,6 +51,36 @@ def test_ai_payload_excludes_numbers_and_identity() -> None:
     assert payload["household"]["children"] is True
 
 
+async def test_ai_wording_is_cached_for_identical_requests() -> None:
+    import httpx
+    import respx
+    from cachetools import TTLCache
+
+    from app.models.plan import PlanSource
+    from app.services import air_quality
+    from app.services.air_quality import AirQualityClient
+    from app.services.plan_builder import PlanBuilder
+    from tests.factories import NOW
+    from tests.payloads import FakeGenerator, air_payload
+
+    generator = FakeGenerator()
+    with respx.mock:
+        respx.get(air_quality.BASE_URL).mock(return_value=httpx.Response(200, json=air_payload()))
+        async with httpx.AsyncClient() as http:
+            builder = PlanBuilder(
+                AirQualityClient(http, TTLCache(maxsize=4, ttl=60)),
+                generator,
+                clock=lambda _tz: NOW,
+                ai_cache=TTLCache(maxsize=4, ttl=60),
+            )
+            profile = make_profile(household={"children": True})
+            first = await builder.build(profile)
+            second = await builder.build(profile)
+    assert first.source is second.source is PlanSource.AI
+    assert first.summary == second.summary
+    assert len(generator.plan_prompts) == 1
+
+
 async def test_build_services_wires_gemini_only_with_key() -> None:
     import httpx
 

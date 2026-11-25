@@ -10,6 +10,7 @@ from app.services.gemini import (
     contains_impact_figure,
     parse_plan_text,
     strip_markdown,
+    thinking_config_for,
 )
 from app.services.prompts import build_chat_prompt, build_plan_prompt, clean_user_text
 
@@ -77,22 +78,27 @@ def test_build_prompts() -> None:
 
 
 class _FakeModels:
-    def __init__(self, result: Any) -> None:
-        self.result = result
+    """Returns (or raises) one result per call, in order; the last result repeats."""
+
+    def __init__(self, *results: Any) -> None:
+        self.results = list(results)
         self.calls: list[dict[str, Any]] = []
 
     async def generate_content(self, **kwargs: Any) -> Any:
         self.calls.append(kwargs)
-        if isinstance(self.result, Exception):
-            raise self.result
-        return self.result
+        result = self.results[min(len(self.calls), len(self.results)) - 1]
+        if isinstance(result, Exception):
+            raise result
+        return result
 
 
-def _generator(result: Any) -> tuple[GeminiGenerator, _FakeModels]:
-    generator = GeminiGenerator(api_key="test-key", model="test-model")
-    models = _FakeModels(result)
-    generator._client = SimpleNamespace(aio=SimpleNamespace(models=models))  # type: ignore[assignment]
-    return generator, models
+def _generator(
+    *results: Any, models: tuple[str, ...] = ("test-model",)
+) -> tuple[GeminiGenerator, _FakeModels]:
+    generator = GeminiGenerator(api_key="test-key", models=models)
+    fake = _FakeModels(*results)
+    generator._client = SimpleNamespace(aio=SimpleNamespace(models=fake))  # type: ignore[assignment]
+    return generator, fake
 
 
 async def test_gemini_plan_uses_json_schema() -> None:
@@ -100,13 +106,54 @@ async def test_gemini_plan_uses_json_schema() -> None:
     assert await generator.generate_plan("sys", "prompt") == '{"summary": "s", "items": []}'
     config = models.calls[0]["config"]
     assert config.response_mime_type == "application/json"
-    assert config.thinking_config.thinking_budget == 0
     assert models.calls[0]["model"] == "test-model"
 
 
 def test_gemini_client_uses_v1beta() -> None:
-    generator = GeminiGenerator(api_key="test-key", model="test-model")
+    generator = GeminiGenerator(api_key="test-key", models=["test-model"])
     assert generator._client._api_client._http_options.api_version == "v1beta"
+
+
+def test_gemini_requires_a_model() -> None:
+    with pytest.raises(ValueError, match="model"):
+        GeminiGenerator(api_key="test-key", models=[])
+
+
+@pytest.mark.parametrize(
+    ("model", "budget", "level"),
+    [("gemini-2.5-flash", 0, None), ("gemini-3.5-flash-lite", None, "LOW")],
+)
+def test_thinking_config_per_model_family(
+    model: str, budget: int | None, level: str | None
+) -> None:
+    config = thinking_config_for(model)
+    assert config.thinking_budget == budget
+    assert (config.thinking_level.name if config.thinking_level else None) == level
+
+
+async def test_gemini_falls_back_to_next_model() -> None:
+    generator, fake = _generator(
+        RuntimeError("429 quota exceeded"),
+        SimpleNamespace(text="Hello from backup"),
+        models=("main-model", "backup-model"),
+    )
+    assert await generator.generate_chat("sys", "prompt") == "Hello from backup"
+    assert [call["model"] for call in fake.calls] == ["main-model", "backup-model"]
+
+
+async def test_gemini_empty_reply_tries_next_model() -> None:
+    generator, fake = _generator(
+        SimpleNamespace(text=""), SimpleNamespace(text="ok"), models=("a", "b")
+    )
+    assert await generator.generate_chat("sys", "prompt") == "ok"
+    assert len(fake.calls) == 2
+
+
+async def test_gemini_all_models_fail() -> None:
+    generator, fake = _generator(RuntimeError("down"), models=("a", "b"))
+    with pytest.raises(AIUnavailableError, match="All Gemini models failed"):
+        await generator.generate_plan("sys", "prompt")
+    assert len(fake.calls) == 2
 
 
 async def test_gemini_chat_returns_text() -> None:

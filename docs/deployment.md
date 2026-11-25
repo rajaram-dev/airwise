@@ -28,7 +28,9 @@ Without a `GEMINI_API_KEY` the app still works in rule-based mode.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `GEMINI_API_KEY` | No* | — | Enables AI wording and chat (*rules-only mode without it) |
-| `GEMINI_MODEL` | No | `gemini-2.5-flash` | Gemini model name |
+| `GEMINI_MODEL` | No | `gemini-3.5-flash-lite` | Main Gemini model |
+| `GEMINI_FALLBACK_MODELS` | No | `gemini-flash-lite-latest,gemini-2.5-flash` | Tried in order if the main model fails |
+| `AI_CACHE_TTL_SECONDS` | No | `3600` | Reuse identical AI plan wording (saves quota) |
 | `ALLOWED_ORIGINS` | No | `http://localhost:8000` | CORS allow-list, comma-separated |
 | `CACHE_TTL_SECONDS` | No | `600` | Air data cache TTL |
 | `RATE_LIMIT_PLAN` | No | `10/minute` | Plan rate limit per IP |
@@ -73,6 +75,6 @@ docker run -p 8080:8080 -e GEMINI_API_KEY=your-key airwise
 - [ ] README complete: vertical, approach, how it works, assumptions, live link, video link
 - [ ] No secrets in repo or history
 - [ ] CI green
-- [ ] Live demo opens and generates a plan
+- [x] Live demo opens and generates a plan (https://airwise-cuu3.onrender.com)
 - [ ] Demo video uploaded (YouTube unlisted or Drive with access) and linked
 - [ ] Submission attempt count tracked (max 3)
