@@ -38,17 +38,16 @@ app/
   main.py                # app factory: middleware, routers, static mount
   config.py              # Settings (pydantic-settings) loaded from env
   api/
-    health.py            # GET  /api/v1/health
-    geocode.py           # GET  /api/v1/geocode
-    air.py               # GET  /api/v1/air
-    plan.py              # POST /api/v1/plan
-    chat.py              # POST /api/v1/chat
+    routes.py            # /api/v1: health, geocode, air, plan, chat (with rate limits)
+    deps.py              # Services container + dependency; wires real clients
   models/
-    profile.py           # UserProfile, enums
-    air.py               # AirReading, HourlyForecast
-    plan.py              # Plan, Recommendation, Impact, Risk
+    profile.py           # UserProfile, Household, enums
+    chat.py              # ChatRequest, ChatContext, ChatResponse
+    air.py               # AirReading, ForecastHour, AirData
+    plan.py              # Plan, Recommendation, Impact, Risk, TimeWindow
   rules/
     aqi.py               # AQI categories and thresholds (constants)
+    context.py           # RuleContext: risk + windows computed once per request
     risk.py              # risk level from AQI + sensitivity
     windows.py           # best outdoor windows from forecast
     catalog.py           # recommendation catalogue (data)
@@ -59,16 +58,17 @@ app/
     geocoding.py         # Open-Meteo geocoding client
     gemini.py            # Gemini wrapper: schema validation, number guard, timeout
     prompts.py           # versioned prompt constants (PLAN_PROMPT_V1, CHAT_PROMPT_V1)
-    cache.py             # TTL cache helper
+    chat.py              # scoped follow-up chat with fallback
     plan_builder.py      # orchestrates: air → rules → AI → merge
   core/
-    security.py          # headers middleware, CORS, rate limiter
-    errors.py            # exception handlers, safe error responses
+    security.py          # headers, body-size limit, cache policy, rate limiter
+    errors.py            # domain exceptions
+    handlers.py          # exception -> safe JSON error responses
     logging.py           # structured logging without PII
 static/
   index.html
   css/  tokens.css · base.css · components.css
-  js/   main.js · api.js · state.js · chat.js
+  js/   main.js · api.js · state.js · chat.js · tabs.js
         render/ air.js · plan.js · form.js
         utils/  aqi.js · format.js · dom.js
 tests/

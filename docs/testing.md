@@ -61,22 +61,17 @@ free and deterministic.
 
 ```
 tests/
-  conftest.py            # fixtures: sample profiles, forecast data, fake Gemini
+  factories.py           # builders: forecasts, readings, profiles, rule contexts
+  payloads.py            # fake Open-Meteo payloads + FakeGenerator (AI)
   unit/
-    test_aqi.py
-    test_risk.py
-    test_windows.py
-    test_recommendations.py
-    test_impact.py
-    test_gemini_validation.py
+    test_aqi.py  test_risk.py  test_windows.py  test_impact.py
+    test_recommendations.py  test_air_quality.py  test_geocoding.py
+    test_gemini.py  test_plan_builder.py  test_models_and_config.py
   integration/
-    test_api_plan.py
-    test_api_chat.py
-    test_api_air.py
-    test_security.py
+    conftest.py          # TestClient with mocked upstreams (respx)
+    test_api.py          # all routes, security headers, rate limits, AI fallback
   frontend/
-    aqi.test.js
-    format.test.js
+    aqi.test.js  format.test.js
 ```
 
 ## 5. Continuous integration
@@ -86,5 +81,5 @@ GitHub Actions on every push to `main`:
 1. `ruff check` and `ruff format --check`
 2. `mypy app`
 3. `pytest --cov=app --cov-fail-under=85`
-4. `node --test tests/frontend`
+4. `node --test "tests/frontend/*.test.js"`
 5. `pip-audit`

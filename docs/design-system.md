@@ -84,7 +84,7 @@ Line height 1.5 for body, 1.2 for headings. Max line length ~70 characters.
 
 | Component | Description | Key a11y notes |
 |---|---|---|
-| **LocationSearch** | Text input + "Use my location" button + suggestions list | Combobox pattern, `aria-expanded`, arrow-key navigation |
+| **LocationSearch** | Search form + "Use my location" button + list of matching places as buttons | Labelled search form, inline error, results announced and first result focused |
 | **ProfileForm** | Short form in fieldsets: household, commute, home | `<fieldset>`/`<legend>`, labels on every input, inline errors via `aria-describedby` |
 | **AqiCard** | Big AQI number, category badge, PM2.5/PM10, health message, updated time | Category spoken as text; number has `aria-label` with category |
 | **RiskBanner** | Risk level with reasons | `role="status"` |

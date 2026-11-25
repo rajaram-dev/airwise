@@ -31,19 +31,22 @@ while still delivering a smart, conversational assistant.
 
 ### Input sent to Gemini (compact)
 
+Impact numbers and coordinates are **never** sent, so the AI cannot restate or alter them.
+
 ```json
 {
   "location": "Delhi",
   "air": { "aqi": 287, "category": "Very Unhealthy", "dominant": "pm2_5" },
   "risk": { "level": "severe", "reasons": ["Very Unhealthy air", "child with asthma at home"] },
-  "best_windows": [{ "start": "14:00", "end": "16:00", "aqi": 182 }],
+  "best_outdoor_windows": ["2 pm–4 pm"],
   "profile": { "children": true, "respiratory_condition": true, "commute_mode": "car",
                "commute_minutes": 35, "cooking_fuel": "lpg", "heating": "none",
                "has_air_purifier": false, "outdoor_activity": "evening_walk" },
   "items": [
     { "id": "shift_activity_window", "category": "routine",
-      "default_title": "Move your walk to 2–4 pm",
-      "impact": { "exposure_reduction_pct": 35, "basis": "computed" } }
+      "default_title": "Move your outdoor time to 2 pm–4 pm",
+      "default_action": "Plan walks, play or sport for this window and keep it light.",
+      "default_why": "Smog is usually worst at night and early morning..." }
   ],
   "language": "en"
 }

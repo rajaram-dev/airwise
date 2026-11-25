@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     rate_limit_plan: str = "10/minute"
     rate_limit_chat: str = "20/minute"
     log_level: str = "INFO"
+    enable_docs: bool = True
 
     @property
     def has_gemini_key(self) -> bool:

@@ -36,7 +36,7 @@ a scoped chat. See [docs/PRD.md](docs/PRD.md) and [docs/architecture.md](docs/ar
 | Lint + format | `ruff check . && ruff format .` |
 | Type check | `mypy app` |
 | Backend tests | `pytest --cov=app` |
-| Frontend tests | `node --test tests/frontend` |
+| Frontend tests | `node --test "tests/frontend/*.test.js"` |
 | Dependency audit | `pip-audit` |
 
 ## Where things live

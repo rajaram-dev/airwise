@@ -1,0 +1,71 @@
+/* Design tokens. See docs/design-system.md. Raw colour values live only in this file. */
+:root {
+  color-scheme: light dark;
+
+  --color-bg: #f7f9fb;
+  --color-surface: #ffffff;
+  --color-text: #1a2330;
+  --color-text-muted: #4a5868;
+  --color-border: #d5dde5;
+  --color-primary: #0b6e99;
+  --color-primary-hover: #085678;
+  --color-on-primary: #ffffff;
+  --color-focus: #ffb000;
+  --color-success: #1e7b34;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fdecea;
+  --color-chip-bg: #e6f2f7;
+
+  --aqi-good-bg: #00e400;
+  --aqi-good-fg: #1a2330;
+  --aqi-moderate-bg: #ffff00;
+  --aqi-moderate-fg: #1a2330;
+  --aqi-usg-bg: #ff7e00;
+  --aqi-usg-fg: #1a2330;
+  --aqi-unhealthy-bg: #ff0000;
+  --aqi-unhealthy-fg: #000000;
+  --aqi-very-bg: #8f3f97;
+  --aqi-very-fg: #ffffff;
+  --aqi-hazardous-bg: #7e0023;
+  --aqi-hazardous-fg: #ffffff;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-hero: 3rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.08);
+  --target-min: 44px;
+  --content-max: 960px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f1720;
+    --color-surface: #18222d;
+    --color-text: #e8eef4;
+    --color-text-muted: #a9b6c3;
+    --color-border: #2c3a48;
+    --color-primary: #5cc4f0;
+    --color-primary-hover: #8ad6f5;
+    --color-on-primary: #0f1720;
+    --color-success: #6fd18a;
+    --color-danger: #ff8a80;
+    --color-danger-bg: #3a1d1b;
+    --color-chip-bg: #22313f;
+  }
+}

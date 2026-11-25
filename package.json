@@ -1,0 +1,9 @@
+{
+  "name": "airwise-frontend-tests",
+  "private": true,
+  "type": "module",
+  "description": "No dependencies. Frontend unit tests use Node's built-in test runner.",
+  "scripts": {
+    "test": "node --test \"tests/frontend/*.test.js\""
+  }
+}

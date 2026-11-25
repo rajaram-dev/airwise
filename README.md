@@ -87,7 +87,7 @@ Open http://localhost:8000.
 
 ```bash
 pytest --cov=app        # backend
-node --test tests/frontend   # frontend
+node --test "tests/frontend/*.test.js"   # frontend
 ```
 
 ## 8. Documentation

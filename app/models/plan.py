@@ -5,6 +5,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from app.models.air import AirReading
+
 
 class RiskLevel(StrEnum):
     """Overall health risk for the household today."""
@@ -65,3 +67,32 @@ class Recommendation(BaseModel):
     why: str
     impact: Impact
     priority: int = Field(ge=0, le=100)
+
+
+class PlanSource(StrEnum):
+    """Who wrote the plan's wording."""
+
+    AI = "ai"
+    RULES = "rules"
+
+
+class Location(BaseModel):
+    """Where the plan is for."""
+
+    name: str
+    latitude: float
+    longitude: float
+
+
+class Plan(BaseModel):
+    """The personalised plan returned to the user."""
+
+    location: Location
+    air: AirReading
+    risk: Risk
+    best_windows: list[TimeWindow]
+    recommendations: list[Recommendation]
+    summary: str
+    source: PlanSource
+    disclaimer: str
+    generated_at: datetime

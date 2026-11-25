@@ -40,7 +40,7 @@ core feature, not polish.
 
 | Component | Pattern |
 |---|---|
-| Location search | WAI-ARIA combobox with listbox |
+| Location search | Search form; results are a list of buttons (simpler and fully keyboard/screen-reader friendly) |
 | Recommendation tabs | WAI-ARIA tabs (arrow keys, Home/End) |
 | Chat | `role="log"`, labelled input, send button with text |
 | AQI number | `aria-label="Air quality index 287, Very Unhealthy"` |
