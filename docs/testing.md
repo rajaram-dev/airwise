@@ -8,7 +8,7 @@
 | Unit — services | Open-Meteo parsing, Gemini output validation, number guard, cache | pytest, respx (mock httpx), fake Gemini client | ≥ 90 % |
 | Integration — API | Each endpoint: success, validation errors, upstream failure, AI fallback | FastAPI `TestClient`, mocked services | All routes |
 | Security | Headers present, `extra` fields rejected, oversized input, rate limit 429, prompt-injection strings handled | pytest | All controls in security.md |
-| Frontend unit | `utils/aqi.js`, `utils/format.js`, input sanitising | Node built-in `node --test` (zero dependencies) | All utils |
+| Frontend unit | `utils/aqi.js`, `utils/chart.js`, `utils/format.js` | Node built-in `node --test` (zero dependencies) | All utils |
 | Accessibility | Lighthouse ≥ 95, axe no serious issues, keyboard + NVDA walkthrough | Manual + tools | Every UI change |
 | Manual E2E | Acceptance scenarios below | Browser | Before each submission |
 
@@ -71,7 +71,7 @@ tests/
     conftest.py          # TestClient with mocked upstreams (respx)
     test_api.py          # all routes, security headers, rate limits, AI fallback
   frontend/
-    aqi.test.js  format.test.js
+    aqi.test.js  art.test.js  chart.test.js  format.test.js
 ```
 
 ## 5. Continuous integration

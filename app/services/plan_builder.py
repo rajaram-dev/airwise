@@ -8,7 +8,9 @@ from typing import Any
 from app.core.errors import AIUnavailableError
 from app.models.plan import Location, Plan, PlanSource, Recommendation
 from app.models.profile import UserProfile
+from app.rules.audience import build_audience_advice
 from app.rules.context import RuleContext, build_context, format_window
+from app.rules.outlook import build_insights, build_outlook
 from app.rules.recommendations import select_recommendations
 from app.services.air_quality import AirQualityClient
 from app.services.gemini import AiPlanText, TextGenerator, parse_plan_text
@@ -83,6 +85,9 @@ class PlanBuilder:
             best_windows=ctx.windows,
             recommendations=recommendations,
             summary=summary,
+            outlook=build_outlook(data.forecast, now, data.current),
+            insights=build_insights(data.forecast, now, data.current),
+            audiences=build_audience_advice(data.current.category, profile.household),
             source=source,
             disclaimer=DISCLAIMER,
             generated_at=now,

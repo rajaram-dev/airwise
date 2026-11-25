@@ -41,13 +41,14 @@ core feature, not polish.
 | Component | Pattern |
 |---|---|
 | Location search | Search form; results are a list of buttons (simpler and fully keyboard/screen-reader friendly) |
-| Recommendation tabs | WAI-ARIA tabs (arrow keys, Home/End) |
+| Forecast chart | `role="img"` with a generated text summary (range and cleanest window); title states the window in words |
+| Household panel | Toggled by the profile chip (`aria-expanded`, `aria-controls`); focus moves to the panel heading |
 | Chat | `role="log"`, labelled input, send button with text |
 | AQI number | `aria-label="Air quality index 287, Very Unhealthy"` |
 
 ## 3. Checklist (run for every UI change)
 
-- [ ] Keyboard-only walkthrough: search → profile → plan → tabs → chat
+- [ ] Keyboard-only walkthrough: search → household panel → plan → chat
 - [ ] Focus always visible and never trapped
 - [ ] Screen reader (NVDA on Windows / VoiceOver) announces plan, errors and chat replies
 - [ ] Contrast checked for new colours (both themes)

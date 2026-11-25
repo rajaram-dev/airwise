@@ -102,6 +102,16 @@ Rate limit: `RATE_LIMIT_PLAN` (default 10/minute per IP).
     }
   ],
   "summary": "Delhi's air is Very Unhealthy today...",
+  "outlook": { "trend": "steady", "headline": "Likely to remain Very Unhealthy over the next 24 hours." },
+  "insights": [
+    "Air quality is 18% worse than this time yesterday.",
+    "PM2.5 is 14 times the WHO daily guideline of 15 µg/m³.",
+    "Main pollutant: PM2.5, fine particles from traffic, burning and dust."
+  ],
+  "audiences": [
+    { "audience": "children", "title": "For children", "subtitle": "Higher risk from today's air.",
+      "tips": [ { "kind": "avoid", "text": "Avoid outdoor play and sports." } ] }
+  ],
   "source": "ai",
   "disclaimer": "General guidance, not medical advice.",
   "generated_at": "2026-11-25T09:02:11+05:30"
@@ -114,6 +124,8 @@ Rate limit: `RATE_LIMIT_PLAN` (default 10/minute per IP).
 - `impact.basis` ∈ `computed`, `estimated`
 - `impact.note`: qualitative impact text when no number applies (e.g. "Large reduction in indoor smoke")
 - `best_windows` is empty when no daytime hour is clean enough for this household
+- `outlook.trend` ∈ `improving`, `steady`, `worsening`
+- `audiences[].audience` ∈ `children`, `adults`, `sensitive` (older adults, asthma, heart or lung conditions), `pregnancy` (adults always; others only if present at home); `tips[].kind` ∈ `do`, `avoid`
 - `source` ∈ `ai`, `rules`
 
 ---

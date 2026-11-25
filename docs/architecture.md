@@ -53,6 +53,8 @@ app/
     catalog.py           # recommendation catalogue (data)
     recommendations.py   # select + rank applicable recommendations
     impact.py            # compute impact numbers
+    outlook.py           # 24-hour trend + insights (vs yesterday, WHO guideline)
+    audience.py          # do/avoid tips for children, adults, sensitive people, pregnancy
   services/
     air_quality.py       # Open-Meteo client
     geocoding.py         # Open-Meteo geocoding client
@@ -67,10 +69,11 @@ app/
     logging.py           # structured logging without PII
 static/
   index.html
+  img/  sky-*.webp · person-*.webp · branch.webp  (optimised illustrations)
   css/  tokens.css · base.css · components.css
-  js/   main.js · api.js · state.js · chat.js · tabs.js
-        render/ air.js · plan.js · form.js
-        utils/  aqi.js · format.js · dom.js
+  js/   main.js · api.js · state.js · chat.js
+        render/ air.js · chart.js · plan.js · form.js
+        utils/  aqi.js · art.js · chart.js · format.js · dom.js · icons.js
 tests/
   unit/         # rules/*, models
   integration/  # API routes with mocked services

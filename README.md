@@ -47,6 +47,8 @@ The user gets:
 - **Indoor air hacks** — purifier use, ventilation timing, avoiding indoor pollution sources.
 - **Greener swaps** — lower-emission alternatives, each with its impact.
 - **Ask AirWise** — chat for questions like "Can my child play outside at 5 pm?"
+- **Advice for each person at home** — separate do/avoid tips for children, adults, sensitive people and pregnancy.
+- **Insights and outlook** — change against yesterday, PM2.5 against the WHO guideline, and the 24-hour trend.
 
 ## 4. Assumptions
 

@@ -37,7 +37,8 @@ SECURITY_HEADERS: dict[str, str] = {
     "Cross-Origin-Opener-Policy": "same-origin",
 }
 HSTS = "max-age=31536000; includeSubDomains"
-STATIC_CACHE = "public, max-age=3600"
+# Revalidate on every load (cheap 304s via ETag) so updates show up immediately.
+STATIC_CACHE = "public, no-cache"
 
 CallNext = Callable[[Request], Awaitable[Response]]
 
@@ -64,7 +65,7 @@ def _apply_headers(request: Request, response: Response) -> None:
         response.headers["Strict-Transport-Security"] = HSTS
     if path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store"
-    elif path.startswith(("/css/", "/js/")):
+    elif path.startswith(("/css/", "/js/", "/img/")):
         response.headers["Cache-Control"] = STATIC_CACHE
 
 

@@ -7,6 +7,7 @@ import {
   categoryMeta,
   describeAqi,
   riskLabel,
+  skyFor,
 } from '../../static/js/utils/aqi.js';
 
 test('every API category has a label and icon', () => {
@@ -35,4 +36,12 @@ test('describeAqi gives a screen-reader friendly sentence', () => {
 test('riskLabel', () => {
   assert.equal(riskLabel('severe'), 'Severe risk');
   assert.equal(riskLabel('other'), 'Unknown risk');
+});
+
+
+test('skyFor picks the illustration for each category', () => {
+  assert.equal(skyFor('good'), 'clear');
+  assert.equal(skyFor('unhealthy'), 'haze');
+  assert.equal(skyFor('hazardous'), 'smog');
+  assert.equal(skyFor('nope'), 'haze');
 });

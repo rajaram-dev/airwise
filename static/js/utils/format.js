@@ -83,7 +83,53 @@ export function impactChips(impact) {
  * @returns {string}
  */
 export function basisLabel(basis) {
-  return basis === 'computed' ? 'Calculated from today\'s forecast' : 'Estimate from published data';
+  return basis === 'computed' ? 'from today\'s forecast' : 'estimate from published data';
+}
+
+/**
+ * Split an impact into a bold headline and a source note for a card footer.
+ * @param {{exposure_reduction_pct?: number|null, co2_kg_saved_per_day?: number|null,
+ *          note?: string|null, basis?: string}} impact
+ * @returns {{headline: string, detail: string} | null}
+ */
+export function impactLine(impact) {
+  const chips = impactChips(impact);
+  if (!chips.length) return null;
+  const [headline, ...rest] = chips;
+  return { headline, detail: [...rest, basisLabel(impact.basis)].join(' · ') };
+}
+
+const HOUSEHOLD_LABELS = Object.freeze({
+  children: 'child',
+  elderly: '65+',
+  respiratory_condition: 'asthma',
+  pregnant: 'pregnancy',
+});
+
+const COMMUTE_LABELS = Object.freeze({
+  car: 'car',
+  two_wheeler: 'scooter',
+  bus: 'bus',
+  metro: 'metro',
+  walk: 'walks',
+  cycle: 'cycles',
+  wfh: 'home-based',
+});
+
+/**
+ * Short summary of saved answers for the header chip, e.g. "Child · asthma · scooter".
+ * @param {Record<string, any> | null} answers
+ * @returns {string}
+ */
+export function profileSummary(answers) {
+  if (!answers) return 'Set up your household';
+  const parts = Object.entries(HOUSEHOLD_LABELS)
+    .filter(([key]) => answers.household?.[key])
+    .map(([, label]) => label);
+  if (!parts.length) parts.push('adults');
+  if (Object.hasOwn(COMMUTE_LABELS, answers.commute_mode)) parts.push(COMMUTE_LABELS[answers.commute_mode]);
+  const text = parts.join(' · ');
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /**
@@ -98,4 +144,37 @@ export function clampInt(value, min, max, fallback) {
   const n = Number.parseInt(String(value), 10);
   if (Number.isNaN(n)) return fallback;
   return Math.min(max, Math.max(min, n));
+}
+
+/**
+ * Greeting for a 0-23 hour.
+ * @param {number} hour
+ * @returns {string}
+ */
+export function greetingFor(hour) {
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+/**
+ * Clock time from an ISO timestamp in the location's own time, e.g. "9:15 am".
+ * @param {string} iso
+ * @returns {string}
+ */
+export function formatClock(iso) {
+  const match = /T(\d{2}):(\d{2})/.exec(String(iso));
+  if (!match) return '';
+  const hour = Number(match[1]);
+  const [hourText, suffix] = formatHour(hour).split(' ');
+  return `${hourText}:${match[2]} ${suffix}`;
+}
+
+/**
+ * Clean an optional display name: trimmed, single-spaced, at most 40 characters.
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function cleanName(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, 40);
 }

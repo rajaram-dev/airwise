@@ -21,7 +21,7 @@ is shown in the footer.
 GET /v1/air-quality?latitude=28.61&longitude=77.21
     &current=us_aqi,pm2_5,pm10,nitrogen_dioxide,ozone
     &hourly=us_aqi,pm2_5
-    &forecast_days=2&timezone=auto
+    &forecast_days=2&past_days=1&timezone=auto
 ```
 
 ## 2. Data models (Pydantic)
@@ -53,7 +53,7 @@ GET /v1/air-quality?latitude=28.61&longitude=77.21
 
 ### HourlyForecast
 
-`hours: list[{ time: datetime, aqi: int, pm2_5: float }]` — next 24 h.
+`hours: list[{ time: datetime, aqi: int, pm2_5: float }]` — yesterday (for the "vs yesterday" insight) through tomorrow.
 
 ### Plan (response)
 
@@ -89,6 +89,7 @@ locations.
 ## 4. Client-side storage
 
 - **Opt-in only:** "Remember my answers on this device" checkbox.
+- The optional **name** (greeting only) is stored under `airwise.name.v1` and is never sent to the server or the AI.
 - Stores the profile (no name, no precise location) in `localStorage` under `airwise.profile.v1`.
 - "Forget my data" button clears it.
 - Reads/writes wrapped in `try/catch`; the app works without it.

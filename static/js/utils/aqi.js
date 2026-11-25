@@ -59,3 +59,22 @@ export function describeAqi(aqi, category) {
 export function riskLabel(level) {
   return Object.hasOwn(RISK_LABELS, level) ? RISK_LABELS[level] : 'Unknown risk';
 }
+
+/** @type {Record<string, 'clear'|'haze'|'smog'>} Which hero sky illustration fits each category. */
+const SKY_BY_CATEGORY = Object.freeze({
+  good: 'clear',
+  moderate: 'clear',
+  unhealthy_sensitive: 'haze',
+  unhealthy: 'haze',
+  very_unhealthy: 'haze',
+  hazardous: 'smog',
+});
+
+/**
+ * Return the sky illustration name for an AQI category.
+ * @param {string} category
+ * @returns {'clear'|'haze'|'smog'}
+ */
+export function skyFor(category) {
+  return Object.hasOwn(SKY_BY_CATEGORY, category) ? SKY_BY_CATEGORY[category] : 'haze';
+}

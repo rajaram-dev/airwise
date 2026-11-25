@@ -79,6 +79,7 @@ class AirQualityClient:
             "current": ",".join(CURRENT_FIELDS),
             "hourly": ",".join(HOURLY_FIELDS),
             "forecast_days": 2,
+            "past_days": 1,  # yesterday, for the "vs yesterday" insight
             "timezone": "auto",
         }
         try:

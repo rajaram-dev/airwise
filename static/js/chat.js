@@ -47,6 +47,13 @@ export function initChat() {
   const input = /** @type {HTMLInputElement} */ (byId('chat-input'));
   const button = form.querySelector('button[type="submit"]');
 
+  for (const suggestion of document.querySelectorAll('.suggestion')) {
+    suggestion.addEventListener('click', () => {
+      input.value = suggestion.textContent;
+      form.requestSubmit();
+    });
+  }
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const message = input.value.trim().slice(0, MAX_MESSAGE);

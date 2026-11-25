@@ -11,8 +11,14 @@ export const state = {
   location: null,
   /** @type {any} */
   plan: null,
+  /** @type {Record<string, any> | null} Household answers (without location). */
+  answers: null,
+  /** @type {Array<{time: string, aqi: number, pm2_5: number}>} Upcoming forecast hours. */
+  hours: [],
   /** @type {Array<{role: 'user'|'assistant', text: string}>} */
   history: [],
+  /** Optional display name for the greeting (never sent to the server). */
+  name: '',
 };
 
 /**
@@ -40,11 +46,39 @@ export function saveProfile(answers) {
   }
 }
 
-/** Remove saved answers from this device. */
+/** Remove saved answers and name from this device. */
 export function forgetProfile() {
   try {
     window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(NAME_KEY);
   } catch {
     // Nothing to clear.
+  }
+}
+
+const NAME_KEY = 'airwise.name.v1';
+
+/**
+ * Load the saved display name, if any.
+ * @returns {string}
+ */
+export function loadName() {
+  try {
+    return window.localStorage.getItem(NAME_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Save (or clear, when empty) the display name on this device only.
+ * @param {string} name
+ */
+export function saveName(name) {
+  try {
+    if (name) window.localStorage.setItem(NAME_KEY, name);
+    else window.localStorage.removeItem(NAME_KEY);
+  } catch {
+    // Storage may be blocked; the greeting still works for this visit.
   }
 }

@@ -1,27 +1,70 @@
-/* Design tokens. See docs/design-system.md. Raw colour values live only in this file. */
-:root {
-  color-scheme: light dark;
+/*
+ * Design tokens — "Nature" theme. See docs/design-system.md.
+ * Raw colour values live only in this file. Every component reads these variables,
+ * so a future theme only needs another [data-theme="..."] block here.
+ */
+:root,
+:root[data-theme="nature"] {
+  color-scheme: light;
 
-  --color-bg: #f7f9fb;
+  --color-bg: #f6f4ee;
   --color-surface: #ffffff;
-  --color-text: #1a2330;
-  --color-text-muted: #4a5868;
-  --color-border: #d5dde5;
-  --color-primary: #0b6e99;
-  --color-primary-hover: #085678;
+  --color-surface-muted: #fbfaf6;
+  --color-text: #1e2b26;
+  --color-text-muted: #4f5d57;
+  --color-border: #e6e2d8;
+  --color-border-strong: #cfc9bb;
+
+  --color-primary: #1f5e3b;
+  --color-primary-hover: #174a2e;
   --color-on-primary: #ffffff;
-  --color-focus: #ffb000;
-  --color-success: #1e7b34;
-  --color-danger: #b3261e;
-  --color-danger-bg: #fdecea;
-  --color-chip-bg: #e6f2f7;
+  --color-primary-soft: #e7f0e9;
+  --color-focus: #f59f00;
+
+  --color-ink: #13312c;
+  --color-ink-tile: #1f443d;
+  --color-on-ink: #ffffff;
+  --color-on-ink-muted: #cfdcd6;
+  --color-ink-overlay-strong: rgb(19 49 44 / 0.96);
+  --color-ink-overlay-soft: rgb(19 49 44 / 0.15);
+  --color-chart-panel: rgb(10 28 25 / 0.55);
+
+  --color-do: #1f7a45;
+  --color-avoid: #b42318;
+  --color-success: #1e6b35;
+  --color-success-bg: #e3f4e8;
+  --color-warning: #713f12;
+  --color-warning-bg: #fde68a;
+  --color-danger: #9b1c1c;
+  --color-danger-strong: #b42318;
+  --color-on-danger: #ffffff;
+  --color-danger-bg: #fdecec;
+
+  --tint-children: #fbede6;
+  --tint-adults: #faf3e3;
+  --tint-sensitive: #eaf2f6;
+  --tint-pregnancy: #f6eaf3;
+  --tint-children-icon: #f6d5c7;
+  --tint-adults-icon: #f1e3bf;
+  --tint-sensitive-icon: #cfe2ec;
+  --tint-pregnancy-icon: #ebcfe3;
+
+  --chart-good: #4caf50;
+  --chart-moderate: #f2c94c;
+  --chart-usg: #f2994a;
+  --chart-unhealthy: #eb5757;
+  --chart-very: #b57bee;
+  --chart-hazardous: #c2185b;
+  --chart-grid: rgb(255 255 255 / 0.14);
+  --chart-text: #dfe9e4;
+  --chart-window: rgb(255 255 255 / 0.1);
 
   --aqi-good-bg: #00e400;
-  --aqi-good-fg: #1a2330;
+  --aqi-good-fg: #111827;
   --aqi-moderate-bg: #ffff00;
-  --aqi-moderate-fg: #1a2330;
+  --aqi-moderate-fg: #111827;
   --aqi-usg-bg: #ff7e00;
-  --aqi-usg-fg: #1a2330;
+  --aqi-usg-fg: #111827;
   --aqi-unhealthy-bg: #ff0000;
   --aqi-unhealthy-fg: #000000;
   --aqi-very-bg: #8f3f97;
@@ -29,43 +72,66 @@
   --aqi-hazardous-bg: #7e0023;
   --aqi-hazardous-fg: #ffffff;
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --text-xs: 0.8125rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
-  --text-lg: 1.25rem;
-  --text-xl: 1.75rem;
-  --text-hero: 3rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-hero: clamp(4.5rem, 10vw, 6.5rem);
 
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
   --space-12: 48px;
 
-  --radius-sm: 6px;
-  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
   --radius-pill: 999px;
-  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.08);
+  --shadow-card: 0 1px 2px rgb(30 43 38 / 0.04), 0 6px 20px rgb(30 43 38 / 0.05);
   --target-min: 44px;
-  --content-max: 960px;
+  --content-max: 1240px;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #0f1720;
-    --color-surface: #18222d;
-    --color-text: #e8eef4;
-    --color-text-muted: #a9b6c3;
-    --color-border: #2c3a48;
-    --color-primary: #5cc4f0;
-    --color-primary-hover: #8ad6f5;
-    --color-on-primary: #0f1720;
-    --color-success: #6fd18a;
-    --color-danger: #ff8a80;
-    --color-danger-bg: #3a1d1b;
-    --color-chip-bg: #22313f;
+  :root:not([data-theme="nature-light"]) {
+    color-scheme: dark;
+
+    --color-bg: #0e1714;
+    --color-surface: #15211d;
+    --color-surface-muted: #1a2823;
+    --color-text: #e6eeea;
+    --color-text-muted: #a9b8b1;
+    --color-border: #26352f;
+    --color-border-strong: #39493f;
+
+    --color-primary: #7bc89a;
+    --color-primary-hover: #9ddab4;
+    --color-on-primary: #0e1714;
+    --color-primary-soft: #1b2e26;
+
+    --color-do: #7bc89a;
+    --color-avoid: #ff8a80;
+    --color-success: #7ddc97;
+    --color-success-bg: #133222;
+    --color-danger: #ff9b9b;
+    --color-danger-bg: #3a1b1b;
+
+    --tint-children: #2a201c;
+    --tint-adults: #29251a;
+    --tint-sensitive: #1a252b;
+    --tint-pregnancy: #2a1d27;
+    --tint-children-icon: #4a3329;
+    --tint-adults-icon: #4a4028;
+    --tint-sensitive-icon: #2b4250;
+    --tint-pregnancy-icon: #4a3043;
   }
 }

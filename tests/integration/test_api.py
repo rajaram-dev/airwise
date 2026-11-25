@@ -117,6 +117,17 @@ def test_plan_rules_only(make_client: ClientFactory) -> None:
     assert body["disclaimer"]
     ids = {rec["id"] for rec in body["recommendations"]}
     assert {"wear_n95", "commute_metro"} <= ids
+    assert body["outlook"]["trend"] in {"improving", "steady", "worsening"}
+    assert body["insights"]
+    assert [card["audience"] for card in body["audiences"]] == ["children", "adults", "sensitive"]
+
+
+def test_air_request_includes_yesterday(
+    make_client: ClientFactory, upstream: respx.MockRouter
+) -> None:
+    make_client().get("/api/v1/air", params={"lat": 28.61, "lon": 77.21})
+    params = upstream.routes["air"].calls[0].request.url.params
+    assert params["past_days"] == "1"
 
 
 def test_plan_with_ai_keeps_rule_numbers(make_client: ClientFactory) -> None:

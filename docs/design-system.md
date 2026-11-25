@@ -12,33 +12,40 @@ All tokens live in `static/css/tokens.css` as CSS custom properties.
 
 ## 2. Colour tokens
 
-### Base (light theme)
+Theme: **Nature** (`data-theme="nature"` on `<html>`): warm cream page, deep green accents,
+serif headings and a dark green hero over a skyline illustration. All colours are CSS custom
+properties in `static/css/tokens.css`; components never use raw hex values, so another theme
+is one more `[data-theme="..."]` block.
 
-| Token | Value | Use |
+| Token | Light | Use |
 |---|---|---|
-| `--color-bg` | `#F7F9FB` | Page background |
-| `--color-surface` | `#FFFFFF` | Cards |
-| `--color-text` | `#1A2330` | Body text (contrast 15:1 on bg) |
-| `--color-text-muted` | `#4A5868` | Secondary text (≥ 7:1) |
-| `--color-border` | `#D5DDE5` | Dividers, inputs |
-| `--color-primary` | `#0B6E99` | Buttons, links (≥ 5:1 on white) |
-| `--color-primary-hover` | `#085678` | Hover/active |
-| `--color-focus` | `#FFB000` | Focus ring (3 px outline + 2 px offset) |
-| `--color-success` | `#1E7B34` | Positive impact text |
-| `--color-danger` | `#B3261E` | Errors |
+| `--color-bg` | `#F6F4EE` | Page background |
+| `--color-surface` | `#FFFFFF` | Cards, inputs |
+| `--color-text` / `--color-text-muted` | `#1E2B26` / `#4F5D57` | Body / secondary text (≥ 7:1) |
+| `--color-primary` | `#1F5E3B` | Buttons, links, icons (≥ 7:1 with white) |
+| `--color-ink` | `#13312C` | Hero background and overlay |
+| `--color-do` / `--color-avoid` | `#1F7A45` / `#B42318` | Tip icons (always paired with text) |
+| `--tint-children` / `--tint-adults` / `--tint-sensitive` / `--tint-pregnancy` | peach / cream / pale blue / pale pink | Audience cards |
+| `--chart-*` | green → yellow → orange → red → purple | Chart line follows the AQI scale |
 
-### Dark theme
+Dark mode (`prefers-color-scheme: dark`) swaps to a deep green-black page with light text.
 
-Applied with `@media (prefers-color-scheme: dark)`.
+### Illustrations
 
-| Token | Value |
+All in `static/img/` as WebP (≈ 200 KB total). Decorative only (`alt=""`).
+
+| File | Used for |
 |---|---|
-| `--color-bg` | `#0F1720` |
-| `--color-surface` | `#18222D` |
-| `--color-text` | `#E8EEF4` |
-| `--color-text-muted` | `#A9B6C3` |
-| `--color-border` | `#2C3A48` |
-| `--color-primary` | `#5CC4F0` |
+| `sky-clear.webp` / `sky-haze.webp` / `sky-smog.webp` | Hero background: Good–Moderate / USG–Very Unhealthy / Hazardous |
+| `person-child.webp` / `person-child-boy.webp` | "For children" card |
+| `person-adult-female.webp` / `person-adult.webp` | "For adults" card |
+| `person-elder-female.webp` / `person-elder.webp` | "For sensitive people" card |
+| `person-pregnant.webp` | "During pregnancy" card |
+
+Where a woman and a man (or girl and boy) are both available, the picture alternates by calendar
+day (`static/js/utils/art.js`): stable all day, both represented over time, and the adult and
+older-adult cards always show different genders on the same day.
+| `branch.webp` | Hero corner decoration |
 
 ### AQI scale (US EPA colours)
 
@@ -55,22 +62,10 @@ Text colours are chosen so every badge meets ≥ 4.5:1 contrast.
 
 ## 3. Typography
 
-System font stack — no web font download:
-
-```css
---font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
-```
-
-| Token | Size (rem) | Use |
-|---|---|---|
-| `--text-xs` | 0.8125 | Labels, captions |
-| `--text-sm` | 0.875 | Secondary text |
-| `--text-base` | 1 | Body (16 px min) |
-| `--text-lg` | 1.25 | Card titles |
-| `--text-xl` | 1.75 | Section headings |
-| `--text-hero` | 3 | AQI number |
-
-Line height 1.5 for body, 1.2 for headings. Max line length ~70 characters.
+- Headings and the AQI number: `--font-display` (Fraunces if installed, otherwise Iowan Old
+  Style, Palatino or Georgia).
+- Body: `--font-sans` (Inter if installed, otherwise the system UI font).
+- No web fonts are downloaded, which keeps the first load small.
 
 ## 4. Spacing, radius, elevation
 
@@ -84,35 +79,21 @@ Line height 1.5 for body, 1.2 for headings. Max line length ~70 characters.
 
 | Component | Description | Key a11y notes |
 |---|---|---|
-| **LocationSearch** | Search form + "Use my location" button + list of matching places as buttons | Labelled search form, inline error, results announced and first result focused |
-| **ProfileForm** | Short form in fieldsets: household, commute, home | `<fieldset>`/`<legend>`, labels on every input, inline errors via `aria-describedby` |
-| **AqiCard** | Big AQI number, category badge, PM2.5/PM10, health message, updated time | Category spoken as text; number has `aria-label` with category |
-| **RiskBanner** | Risk level with reasons | `role="status"` |
-| **TimeWindowList** | Best outdoor windows as a list of time ranges | Real `<time>` elements |
-| **RecommendationCard** | Title, action, why, impact chips (e.g. "−40 % exposure", "1.8 kg CO₂/day"), basis label | Impact chips have text, not icons only |
-| **Tabs** | Routine · Indoor · Greener swaps | WAI-ARIA tabs pattern, arrow keys |
-| **ChatPanel** | Message log + input + send | Log `aria-live="polite"`, input labelled, Enter to send |
-| **Button** | Primary, secondary, ghost | Min target 44×44 px, visible focus |
-| **Alert** | Info, warning, error | `role="alert"` for errors only |
-| **Disclaimer** | "General guidance, not medical advice" | Always visible near plan |
+| **Top bar** | Logo, greeting ("Good evening, Raja Ram"), search with results dropdown, location button, date, "My family" chip | Greeting is the page `h1`; icon buttons have `aria-label`; chip has `aria-expanded` |
+| **My family panel** | Optional name, household, commute, home, habits | Name stays on the device; `<fieldset>`/`<legend>` |
+| **Hero** | Skyline matched to the AQI, big AQI number + badge, verdict, PM2.5 / PM10 / NO₂ / O₃ tiles, 24-hour line chart | Chart is an SVG with a `<title>` summary; badge always has text |
+| **Audience cards** | For children / adults / sensitive people / during pregnancy (only groups at home), three do/avoid tips each, illustration | Tip type is announced ("Do:", "Avoid:"), never icon-only |
+| **Indoor air row** | Indoor recommendations as icon tiles with impact | Real list |
+| **Insights card** | vs yesterday, PM2.5 vs WHO guideline, main pollutant | Plain text |
+| **Outlook card** | Next-24-hour trend (improving / steady / worsening) | Bars are decorative; sentence carries the meaning |
+| **Action cards** | Daily routine and greener swaps, each with an impact line | `h4` titles |
+| **Chat** | Suggested questions, log, pill input | `role="log"`, labelled input |
 
 ## 6. Layout
 
-```
-┌─────────────────────────────┐
-│ Header: AirWise · skip link │
-├─────────────────────────────┤
-│ LocationSearch              │
-│ AqiCard        RiskBanner   │   ← stacked on mobile, 2 columns ≥ 1024 px
-│ ProfileForm  [Get my plan]  │
-│ Summary (AI)                │
-│ Tabs: Routine|Indoor|Swaps  │
-│   RecommendationCard × n    │
-│ TimeWindowList              │
-│ ChatPanel                   │
-│ Footer: data sources, disclaimer
-└─────────────────────────────┘
-```
+Top bar → hero (info left, chart right at ≥ 1000 px) → "Your plan for today" → audience cards →
+indoor / insights / outlook row → routine and swap cards → chat → footer. Everything stacks into a
+single column on phones.
 
 ## 7. Motion
 

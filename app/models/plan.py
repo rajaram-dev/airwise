@@ -84,6 +84,53 @@ class Location(BaseModel):
     longitude: float
 
 
+class Trend(StrEnum):
+    """Direction of air quality over the next 24 hours."""
+
+    IMPROVING = "improving"
+    STEADY = "steady"
+    WORSENING = "worsening"
+
+
+class Outlook(BaseModel):
+    """Plain-language forecast for the next 24 hours."""
+
+    trend: Trend
+    headline: str
+
+
+class Audience(StrEnum):
+    """Groups of people who get their own advice card."""
+
+    CHILDREN = "children"
+    ADULTS = "adults"
+    SENSITIVE = "sensitive"
+    PREGNANCY = "pregnancy"
+
+
+class TipKind(StrEnum):
+    """Whether a tip is something to do or to avoid."""
+
+    DO = "do"
+    AVOID = "avoid"
+
+
+class Tip(BaseModel):
+    """One short piece of advice."""
+
+    kind: TipKind
+    text: str
+
+
+class AudienceAdvice(BaseModel):
+    """Advice for one group of people at home."""
+
+    audience: Audience
+    title: str
+    subtitle: str
+    tips: list[Tip]
+
+
 class Plan(BaseModel):
     """The personalised plan returned to the user."""
 
@@ -93,6 +140,9 @@ class Plan(BaseModel):
     best_windows: list[TimeWindow]
     recommendations: list[Recommendation]
     summary: str
+    outlook: Outlook
+    insights: list[str]
+    audiences: list[AudienceAdvice]
     source: PlanSource
     disclaimer: str
     generated_at: datetime

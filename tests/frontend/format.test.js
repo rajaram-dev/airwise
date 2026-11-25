@@ -4,11 +4,16 @@ import { test } from 'node:test';
 import {
   basisLabel,
   clampInt,
+  cleanName,
+  formatClock,
   formatHour,
   formatTimeRange,
+  greetingFor,
   impactChips,
+  impactLine,
   localHour,
   pollutantName,
+  profileSummary,
 } from '../../static/js/utils/format.js';
 
 test('formatHour uses 12-hour labels', () => {
@@ -43,7 +48,7 @@ test('impactChips skips zero and missing values', () => {
 
 test('basisLabel', () => {
   assert.match(basisLabel('computed'), /forecast/);
-  assert.match(basisLabel('estimated'), /Estimate/);
+  assert.match(basisLabel('estimated'), /published data/);
 });
 
 test('pollutantName', () => {
@@ -56,4 +61,45 @@ test('clampInt', () => {
   assert.equal(clampInt('999', 0, 240, 0), 240);
   assert.equal(clampInt('-5', 0, 240, 0), 0);
   assert.equal(clampInt('abc', 0, 240, 7), 7);
+});
+
+test('impactLine splits headline and source', () => {
+  assert.deepEqual(impactLine({ exposure_reduction_pct: 40, basis: 'computed' }), {
+    headline: 'Up to 40% less pollution breathed',
+    detail: 'from today\'s forecast',
+  });
+  assert.deepEqual(impactLine({ co2_kg_saved_per_day: 3.3, note: 'No traffic smog', basis: 'estimated' }), {
+    headline: 'Saves 3.3 kg CO₂ a day',
+    detail: 'No traffic smog · estimate from published data',
+  });
+  assert.equal(impactLine({ basis: 'estimated' }), null);
+});
+
+test('profileSummary builds the header chip text', () => {
+  assert.equal(profileSummary(null), 'Set up your household');
+  assert.equal(
+    profileSummary({ household: { children: true, respiratory_condition: true }, commute_mode: 'two_wheeler' }),
+    'Child · asthma · scooter',
+  );
+  assert.equal(profileSummary({ household: {}, commute_mode: 'wfh' }), 'Adults · home-based');
+  assert.equal(profileSummary({ household: {}, commute_mode: 'unknown' }), 'Adults');
+});
+
+
+test('greetingFor', () => {
+  assert.equal(greetingFor(8), 'Good morning');
+  assert.equal(greetingFor(13), 'Good afternoon');
+  assert.equal(greetingFor(20), 'Good evening');
+});
+
+test('formatClock keeps the location time', () => {
+  assert.equal(formatClock('2026-11-25T09:15:00+05:30'), '9:15 am');
+  assert.equal(formatClock('2026-11-25T21:05'), '9:05 pm');
+  assert.equal(formatClock('bad'), '');
+});
+
+test('cleanName trims and limits length', () => {
+  assert.equal(cleanName('  Raja   Ram  '), 'Raja Ram');
+  assert.equal(cleanName('x'.repeat(50)).length, 40);
+  assert.equal(cleanName(undefined), '');
 });

@@ -31,3 +31,6 @@ Thumbs.db
 
 # Local tool config
 .claude/
+
+# Original image uploads (optimised WebP copies are committed)
+static/img/originals/

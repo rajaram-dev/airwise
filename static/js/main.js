@@ -1,36 +1,43 @@
 /**
- * App entry point: wires location search, air card, profile form, plan and chat.
+ * App entry point: location search, dashboard, household panel, plan and chat.
  * @module main
  */
 
 import { geocode, getAir, getPlan } from './api.js';
 import { initChat, resetChat } from './chat.js';
-import { renderAir } from './render/air.js';
+import { personaliseHero, renderHero } from './render/air.js';
+import { renderChart } from './render/chart.js';
 import { fillAnswers, readAnswers, validateAnswers } from './render/form.js';
 import { renderPlan } from './render/plan.js';
-import { forgetProfile, loadSavedProfile, saveProfile, state } from './state.js';
-import { initTabs } from './tabs.js';
-import { byId, clear, el } from './utils/dom.js';
+import { forgetProfile, loadName, loadSavedProfile, saveName, saveProfile, state } from './state.js';
+import { upcomingHours } from './utils/chart.js';
+import { byId, el } from './utils/dom.js';
+import { cleanName, greetingFor, profileSummary } from './utils/format.js';
+import { hydrateIcons } from './utils/icons.js';
 
 const GEO_TIMEOUT_MS = 10000;
+const GEO_MAX_AGE_MS = 600000;
 
-const statusRegion = byId('status');
-const errorBox = byId('error');
+const form = /** @type {HTMLFormElement} */ (byId('profile-form'));
+const panel = byId('profile-panel');
+const chip = byId('profile-chip');
 
 /** @param {string} message */
 function announce(message) {
-  statusRegion.textContent = message;
+  byId('status').textContent = message;
 }
 
 /** @param {string} message */
 function showError(message) {
-  errorBox.textContent = message;
-  errorBox.hidden = false;
+  const box = byId('error');
+  box.textContent = message;
+  box.hidden = false;
 }
 
 function hideError() {
-  errorBox.hidden = true;
-  errorBox.textContent = '';
+  const box = byId('error');
+  box.hidden = true;
+  box.textContent = '';
 }
 
 /**
@@ -43,7 +50,7 @@ async function withBusy(button, busyText, task) {
   const original = button?.textContent ?? '';
   if (button) {
     button.disabled = true;
-    button.textContent = busyText;
+    if (!button.classList.contains('icon-btn')) button.textContent = busyText;
   }
   hideError();
   announce(busyText);
@@ -55,51 +62,122 @@ async function withBusy(button, busyText, task) {
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = original;
+      if (!button.classList.contains('icon-btn')) button.textContent = original;
     }
   }
 }
 
+/* ---------- Greeting ---------- */
+
+const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+function renderGreeting() {
+  const now = new Date();
+  const heading = byId('greeting');
+  const parts = [document.createTextNode(greetingFor(now.getHours()))];
+  if (state.name) {
+    parts.push(document.createTextNode(', '), el('span', { className: 'greeting__name', text: state.name }));
+  }
+  heading.replaceChildren(...parts);
+  byId('today-date').textContent = DATE_FORMAT.format(now);
+}
+
+/* ---------- Household panel ---------- */
+
+/** @param {boolean} open */
+function setPanel(open) {
+  panel.hidden = !open;
+  chip.setAttribute('aria-expanded', String(open));
+  if (open) {
+    byId('welcome').hidden = true;
+    byId('profile-heading').focus();
+  }
+}
+
+function refreshChip() {
+  byId('profile-chip-text').textContent = profileSummary(state.answers);
+}
+
+/* ---------- Plan ---------- */
+
+async function buildPlan() {
+  const plan = await getPlan({
+    ...state.answers,
+    latitude: state.location.latitude,
+    longitude: state.location.longitude,
+    location_name: state.location.name,
+  });
+  state.plan = plan;
+  resetChat();
+  personaliseHero(plan);
+  renderChart(state.hours, plan.best_windows);
+  renderPlan(plan);
+  byId('plan-section').hidden = false;
+  byId('chat-section').hidden = false;
+  announce(`Your plan for ${plan.location.name} is ready.`);
+}
+
+/* ---------- Location ---------- */
+
 /**
- * Set the chosen location and show the current air.
+ * Load air data for a location, show the dashboard, then build a plan if we know the household.
  * @param {{name: string, latitude: number, longitude: number}} location
  */
 async function chooseLocation(location) {
   state.location = location;
+  state.plan = null;
   byId('search-results').hidden = true;
+
   const air = await getAir(location.latitude, location.longitude);
-  byId('air-place').textContent = location.name;
-  renderAir(byId('air-card'), air.current);
-  byId('air-section').hidden = false;
-  byId('profile-section').hidden = false;
-  announce(`Air quality for ${location.name} loaded: ${air.current.category_label}.`);
+  state.hours = upcomingHours(air.forecast, air.current.observed_at);
+  renderHero(location.name, air.current);
+  renderChart(state.hours, null);
+  byId('welcome').hidden = true;
+  byId('dashboard').hidden = false;
+  byId('plan-section').hidden = true;
+  byId('chat-section').hidden = true;
+  announce(`Air quality for ${location.name}: ${air.current.category_label}.`);
+
+  if (state.answers) {
+    await buildPlan();
+  } else {
+    setPanel(true);
+    announce(`Air quality for ${location.name} loaded. Tell us about your household to get your plan.`);
+  }
 }
 
 /** @param {Array<any>} results */
 function showResults(results) {
   const list = byId('search-results');
-  clear(list);
-  for (const place of results) {
-    const label = [place.name, place.admin1, place.country].filter(Boolean).join(', ');
-    const button = el('button', { className: 'btn', text: label, attrs: { type: 'button' } });
-    button.addEventListener('click', () =>
-      withBusy(null, `Getting live air data for ${place.name}…`, () =>
-        chooseLocation({ name: place.name, latitude: place.latitude, longitude: place.longitude }),
-      ),
-    );
-    list.append(el('li', {}, [button]));
-  }
+  list.replaceChildren(
+    ...results.map((place) => {
+      const label = [place.name, place.admin1, place.country].filter(Boolean).join(', ');
+      const button = el('button', { text: label, attrs: { type: 'button' } });
+      button.addEventListener('click', () =>
+        withBusy(null, `Getting live air data for ${place.name}…`, () =>
+          chooseLocation({ name: place.name, latitude: place.latitude, longitude: place.longitude }),
+        ),
+      );
+      return el('li', {}, [button]);
+    }),
+  );
   list.hidden = false;
   announce(`${results.length} places found. Choose one from the list.`);
   list.querySelector('button')?.focus();
 }
 
 function initSearch() {
-  const form = /** @type {HTMLFormElement} */ (byId('search-form'));
+  const searchForm = /** @type {HTMLFormElement} */ (byId('search-form'));
   const input = /** @type {HTMLInputElement} */ (byId('city-input'));
   const fieldError = byId('city-error');
+  const results = byId('search-results');
 
-  form.addEventListener('submit', (event) => {
+  searchForm.addEventListener('submit', (event) => {
     event.preventDefault();
     const query = input.value.trim();
     const valid = query.length >= 2;
@@ -110,10 +188,17 @@ function initSearch() {
       input.focus();
       return;
     }
-    withBusy(form.querySelector('button'), 'Searching…', async () => {
-      const { results } = await geocode(query);
-      showResults(results);
+    withBusy(null, 'Searching…', async () => {
+      const { results: places } = await geocode(query);
+      showResults(places);
     });
+  });
+
+  searchForm.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !results.hidden) {
+      results.hidden = true;
+      input.focus();
+    }
   });
 
   const geoButton = /** @type {HTMLButtonElement} */ (byId('geo-btn'));
@@ -122,14 +207,16 @@ function initSearch() {
     return;
   }
   geoButton.addEventListener('click', () => {
-    withBusy(geoButton, 'Finding you…', async () => {
+    withBusy(geoButton, 'Finding your location…', async () => {
       const position = await new Promise((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, () =>
-          reject(new Error('We could not get your location. Please search for your city instead.')),
-        { timeout: GEO_TIMEOUT_MS, maximumAge: 600000 }),
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          () => reject(new Error('We couldn\'t get your location. Search for your city instead.')),
+          { timeout: GEO_TIMEOUT_MS, maximumAge: GEO_MAX_AGE_MS },
+        ),
       );
       await chooseLocation({
-        name: 'your location',
+        name: 'Your location',
         latitude: Math.round(position.coords.latitude * 100) / 100,
         longitude: Math.round(position.coords.longitude * 100) / 100,
       });
@@ -138,29 +225,44 @@ function initSearch() {
 }
 
 function initProfile() {
-  const form = /** @type {HTMLFormElement} */ (byId('profile-form'));
   const saved = loadSavedProfile();
-  if (saved) fillAnswers(form, saved);
+  if (saved) {
+    fillAnswers(form, saved);
+    state.answers = readAnswers(form);
+  }
+  state.name = cleanName(loadName());
+  form.elements.namedItem('user_name').value = state.name;
+  refreshChip();
+  renderGreeting();
+
+  chip.addEventListener('click', () => setPanel(panel.hidden));
+  byId('profile-close').addEventListener('click', () => {
+    setPanel(false);
+    chip.focus();
+  });
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (!state.location || !validateAnswers(form)) return;
-    const answers = readAnswers(form);
-    if (form.elements.namedItem('remember').checked) saveProfile(answers);
+    if (!validateAnswers(form)) return;
+    state.answers = readAnswers(form);
+    state.name = cleanName(form.elements.namedItem('user_name').value);
+    if (form.elements.namedItem('remember').checked) {
+      saveProfile(state.answers);
+      saveName(state.name);
+    }
+    refreshChip();
+    renderGreeting();
 
+    if (!state.location) {
+      setPanel(false);
+      byId('welcome').hidden = false;
+      showError('Saved. Now search for your city to get your plan.');
+      byId('city-input').focus();
+      return;
+    }
     withBusy(form.querySelector('button[type="submit"]'), 'Making your plan…', async () => {
-      const plan = await getPlan({
-        ...answers,
-        latitude: state.location.latitude,
-        longitude: state.location.longitude,
-        location_name: state.location.name,
-      });
-      state.plan = plan;
-      resetChat();
-      renderPlan(plan);
-      byId('plan-section').hidden = false;
-      byId('chat-section').hidden = false;
-      announce(`Your plan for ${plan.location.name} is ready.`);
+      await buildPlan();
+      setPanel(false);
       byId('plan-heading').focus();
     });
   });
@@ -168,11 +270,11 @@ function initProfile() {
   byId('forget-btn').addEventListener('click', () => {
     forgetProfile();
     form.elements.namedItem('remember').checked = false;
-    announce('Saved answers removed from this device.');
+    announce('Saved answers and name removed from this device.');
   });
 }
 
+hydrateIcons();
 initSearch();
 initProfile();
-initTabs(document.querySelector('[role="tablist"]'));
 initChat();
