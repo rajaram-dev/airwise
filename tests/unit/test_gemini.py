@@ -5,7 +5,12 @@ from typing import Any
 import pytest
 
 from app.core.errors import AIUnavailableError
-from app.services.gemini import GeminiGenerator, contains_impact_figure, parse_plan_text
+from app.services.gemini import (
+    GeminiGenerator,
+    contains_impact_figure,
+    parse_plan_text,
+    strip_markdown,
+)
 from app.services.prompts import build_chat_prompt, build_plan_prompt, clean_user_text
 
 
@@ -95,7 +100,13 @@ async def test_gemini_plan_uses_json_schema() -> None:
     assert await generator.generate_plan("sys", "prompt") == '{"summary": "s", "items": []}'
     config = models.calls[0]["config"]
     assert config.response_mime_type == "application/json"
+    assert config.thinking_config.thinking_budget == 0
     assert models.calls[0]["model"] == "test-model"
+
+
+def test_gemini_client_uses_v1beta() -> None:
+    generator = GeminiGenerator(api_key="test-key", model="test-model")
+    assert generator._client._api_client._http_options.api_version == "v1beta"
 
 
 async def test_gemini_chat_returns_text() -> None:
@@ -113,3 +124,32 @@ async def test_gemini_sdk_error_raises() -> None:
     generator, _ = _generator(RuntimeError("quota exceeded"))
     with pytest.raises(AIUnavailableError):
         await generator.generate_plan("sys", "prompt")
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("**Wear a mask** outdoors", "Wear a mask outdoors"),
+        ("# Stay   indoors", "Stay indoors"),
+        ("- Close windows", "Close windows"),
+        ("_Smog_ is heavy", "Smog is heavy"),
+        ("keep exercise_indoors as is", "keep exercise_indoors as is"),
+        ("Use `HEPA`  filters *now*", "Use HEPA filters now"),
+        ("Plain text", "Plain text"),
+    ],
+)
+def test_strip_markdown(text: str, expected: str) -> None:
+    assert strip_markdown(text) == expected
+
+
+def test_parse_strips_markdown_from_plan_text() -> None:
+    raw = plan_json(
+        summary="**Delhi** air is bad today.",
+        items=[
+            {"id": "wear_n95", "title": "**Wear a mask**", "action": "* Use N95.", "why": "_Smog_"}
+        ],
+    )
+    parsed = parse_plan_text(raw, {"wear_n95"})
+    assert parsed.summary == "Delhi air is bad today."
+    item = parsed.items[0]
+    assert (item.title, item.action, item.why) == ("Wear a mask", "Use N95.", "Smog")

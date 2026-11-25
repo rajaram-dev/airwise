@@ -14,7 +14,7 @@ from app.rules.outlook import build_insights, build_outlook
 from app.rules.recommendations import select_recommendations
 from app.services.air_quality import AirQualityClient
 from app.services.gemini import AiPlanText, TextGenerator, parse_plan_text
-from app.services.prompts import PLAN_SYSTEM_PROMPT_V1, build_plan_prompt
+from app.services.prompts import PLAN_SYSTEM_PROMPT_V2, build_plan_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class PlanBuilder:
         generator: TextGenerator, ctx: RuleContext, recs: list[Recommendation]
     ) -> AiPlanText:
         prompt = build_plan_prompt(ai_payload(ctx, recs))
-        raw = await generator.generate_plan(PLAN_SYSTEM_PROMPT_V1, prompt)
+        raw = await generator.generate_plan(PLAN_SYSTEM_PROMPT_V2, prompt)
         return parse_plan_text(raw, {rec.id for rec in recs})
 
 

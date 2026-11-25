@@ -10,12 +10,21 @@ from pydantic import BaseModel, Field, ValidationError
 
 from app.core.errors import AIUnavailableError
 
+API_VERSION = "v1beta"
 REQUEST_TIMEOUT_SECONDS = 15.0
 PLAN_TEMPERATURE = 0.4
 CHAT_TEMPERATURE = 0.6
-PLAN_MAX_TOKENS = 1024
+PLAN_MAX_TOKENS = 2048
 CHAT_MAX_TOKENS = 400
+# Rewording needs no reasoning; thinking tokens would also eat the output budget.
+NO_THINKING = types.ThinkingConfig(thinking_budget=0)
 
+# Markdown that must not appear in plain-text plan fields: (pattern, replacement), applied in order.
+_MARKDOWN_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\*\*|__|`"), ""),  # bold markers and code ticks
+    (re.compile(r"(?<!\w)[*_](\S(?:.*?\S)?)[*_](?!\w)"), r"\1"),  # *emphasis* / _emphasis_
+    (re.compile(r"^\s*(?:#{1,6}|[*\-•])\s+"), ""),  # leading heading or bullet
+)
 # Impact-like figures the AI must never produce, e.g. "40%", "2 kg", "50 percent".
 _IMPACT_FIGURE = re.compile(r"\d+(?:[.,]\d+)?\s*(?:%|percent|kg|kilo|µg|ug)", re.IGNORECASE)
 
@@ -53,7 +62,10 @@ class GeminiGenerator:
 
     def __init__(self, api_key: str, model: str) -> None:
         """Create a generator for the given model."""
-        self._client = genai.Client(api_key=api_key)
+        # System instructions and JSON schemas need the v1beta API (v1 rejects them).
+        self._client = genai.Client(
+            api_key=api_key, http_options=types.HttpOptions(api_version=API_VERSION)
+        )
         self._model = model
 
     async def generate_plan(self, system: str, prompt: str) -> str:
@@ -64,6 +76,7 @@ class GeminiGenerator:
             max_output_tokens=PLAN_MAX_TOKENS,
             response_mime_type="application/json",
             response_schema=AiPlanText,
+            thinking_config=NO_THINKING,
         )
         return await self._generate(prompt, config)
 
@@ -73,6 +86,7 @@ class GeminiGenerator:
             system_instruction=system,
             temperature=CHAT_TEMPERATURE,
             max_output_tokens=CHAT_MAX_TOKENS,
+            thinking_config=NO_THINKING,
         )
         return await self._generate(prompt, config)
 
@@ -96,6 +110,22 @@ def contains_impact_figure(text: str) -> bool:
     return bool(_IMPACT_FIGURE.search(text))
 
 
+def strip_markdown(text: str) -> str:
+    """Remove Markdown formatting and collapse whitespace for plain-text fields."""
+    for pattern, replacement in _MARKDOWN_RULES:
+        text = pattern.sub(replacement, text)
+    return " ".join(text.split())
+
+
+def _plain_item(item: AiItemText) -> AiItemText:
+    return AiItemText(
+        id=item.id,
+        title=strip_markdown(item.title),
+        action=strip_markdown(item.action),
+        why=strip_markdown(item.why),
+    )
+
+
 def parse_plan_text(raw: str, allowed_ids: set[str]) -> AiPlanText:
     """Validate AI plan JSON and apply guardrails.
 
@@ -109,8 +139,9 @@ def parse_plan_text(raw: str, allowed_ids: set[str]) -> AiPlanText:
     except ValidationError as exc:
         raise AIUnavailableError("Gemini output did not match the schema") from exc
 
-    items = [item for item in parsed.items if item.id in allowed_ids]
+    items = [_plain_item(item) for item in parsed.items if item.id in allowed_ids]
+    summary = strip_markdown(parsed.summary)
     texts = [parsed.summary, *(f"{i.title} {i.action} {i.why}" for i in items)]
     if any(contains_impact_figure(text) for text in texts):
         raise AIUnavailableError("Gemini output contained impact figures")
-    return AiPlanText(summary=parsed.summary, items=items)
+    return AiPlanText(summary=summary, items=items)

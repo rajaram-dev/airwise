@@ -6,19 +6,39 @@
 import { sendChat } from './api.js';
 import { state } from './state.js';
 import { byId, el } from './utils/dom.js';
+import { parseReply } from './utils/markdown.js';
 
 const MAX_HISTORY = 6;
 const MAX_MESSAGE = 500;
+
+/** @param {Array<{text: string, bold: boolean}>} spans */
+function inline(spans) {
+  return spans.map((span) => (span.bold ? el('strong', { text: span.text }) : document.createTextNode(span.text)));
+}
+
+/**
+ * Build formatted nodes for an assistant reply (paragraphs, lists, bold) using DOM APIs only.
+ * @param {string} text
+ * @returns {HTMLElement[]}
+ */
+function formatReply(text) {
+  return parseReply(text).map((block) =>
+    block.type === 'p'
+      ? el('p', {}, inline(block.spans))
+      : el(block.type, {}, block.items.map((spans) => el('li', {}, inline(spans)))),
+  );
+}
 
 /**
  * @param {'user'|'assistant'} role
  * @param {string} text
  */
 function appendMessage(role, text) {
+  const body = role === 'assistant' ? formatReply(text) : [el('p', { text })];
   byId('chat-log').append(
     el('div', { className: `chat-msg chat-msg--${role}` }, [
       el('span', { className: 'chat-msg__who', text: role === 'user' ? 'You' : 'AirWise' }),
-      el('p', { text }),
+      ...body,
     ]),
   );
 }

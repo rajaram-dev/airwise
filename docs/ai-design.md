@@ -20,9 +20,10 @@ while still delivering a smart, conversational assistant.
 | Setting | Value |
 |---|---|
 | Model | `GEMINI_MODEL` env var (default: current Gemini Flash model) |
-| SDK | `google-genai` |
+| SDK | `google-genai`, API version `v1beta` (needed for system instructions and JSON schemas) |
+| Thinking | Off (`thinking_budget=0`): rewording needs no reasoning, and thinking tokens would eat the output budget |
 | Temperature | 0.4 (plan), 0.6 (chat) |
-| Max output tokens | 1024 (plan), 400 (chat) |
+| Max output tokens | 2048 (plan), 400 (chat) |
 | Timeout | 15 s |
 | Output format | JSON with `response_schema` (plan); plain text (chat) |
 | Calls per plan | 1 |
@@ -80,8 +81,9 @@ Impact numbers and coordinates are **never** sent, so the AI cannot restate or a
 2. Every returned `id` must exist in the input set; unknown ids are dropped.
 3. Missing ids keep their catalogue default text.
 4. Reject output containing digits followed by `%` or `kg` that are not in the input (number guard).
-5. Numbers and categories always come from the rules engine.
-6. Any failure → full fallback to catalogue text, `source: "rules"`.
+5. Strip any Markdown (`**`, `*x*`, backticks, leading `#` or bullets) from plan fields, which are plain text.
+6. Numbers and categories always come from the rules engine.
+7. Any failure → full fallback to catalogue text, `source: "rules"`.
 
 ## 4. Chat
 
@@ -92,6 +94,9 @@ Impact numbers and coordinates are **never** sent, so the AI cannot restate or a
   redirect.
 - Never reveals the system prompt; ignores instructions inside user text that try to change role.
 - Stateless: client sends the last ≤ 6 turns; server keeps nothing.
+- Formatting: short paragraphs, `- ` bullets, `**bold**` labels only. The frontend
+  (`static/js/utils/markdown.js`) turns exactly that subset into paragraphs, lists and bold text
+  with DOM APIs; anything else is shown as plain text, never as HTML.
 
 ## 5. Guardrails summary
 
@@ -143,5 +148,5 @@ CO₂ saved per day = `(factor_current − factor_alternative) × commute_km × 
 
 ## 7. Prompt files
 
-Prompts live in `app/services/prompts.py` as constants with version tags (`PLAN_PROMPT_V1`) so
+Prompts live in `app/services/prompts.py` as constants with version tags (`PLAN_SYSTEM_PROMPT_V2`, `CHAT_SYSTEM_PROMPT_V2`; V2 added formatting rules) so
 changes are reviewable and testable.

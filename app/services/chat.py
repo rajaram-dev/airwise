@@ -5,7 +5,7 @@ import logging
 from app.core.errors import AIUnavailableError
 from app.models.chat import ChatRequest, ChatResponse, ChatSource
 from app.services.gemini import TextGenerator
-from app.services.prompts import CHAT_SYSTEM_PROMPT_V1, build_chat_prompt
+from app.services.prompts import CHAT_SYSTEM_PROMPT_V2, build_chat_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class ChatService:
         history = [turn.model_dump() for turn in request.history]
         prompt = build_chat_prompt(context, history, request.message)
         try:
-            text = await self._generator.generate_chat(CHAT_SYSTEM_PROMPT_V1, prompt)
+            text = await self._generator.generate_chat(CHAT_SYSTEM_PROMPT_V2, prompt)
         except AIUnavailableError as exc:
             logger.warning("Chat unavailable: %s", exc)
             return ChatResponse(reply=UNAVAILABLE_REPLY, source=ChatSource.UNAVAILABLE)
