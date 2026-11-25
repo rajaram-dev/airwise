@@ -57,6 +57,18 @@ async def geocode(
     return GeocodeResponse(results=await services.geocoder.search(q))
 
 
+@router.get("/reverse-geocode", tags=["location"])
+@limiter.limit(GENERAL_RATE_LIMIT)
+async def reverse_geocode(
+    request: Request,
+    services: ServicesDep,
+    lat: Annotated[float, Query(ge=-90, le=90)],
+    lon: Annotated[float, Query(ge=-180, le=180)],
+) -> Place:
+    """Name of the town or city at a coordinate (rounded to about 1 km)."""
+    return await services.reverse_geocoder.lookup(lat, lon)
+
+
 @router.get("/air", tags=["air"])
 @limiter.limit(GENERAL_RATE_LIMIT)
 async def air(

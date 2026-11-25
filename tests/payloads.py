@@ -20,6 +20,16 @@ GEOCODE_PAYLOAD: dict[str, Any] = {
 }
 
 
+REVERSE_PAYLOAD: dict[str, Any] = {
+    "address": {
+        "city": "Lucknow",
+        "state_district": "Lucknow District",
+        "state": "Uttar Pradesh",
+        "country": "India",
+    }
+}
+
+
 def air_payload(
     current_aqi: int = 287, aqi_by_hour: dict[int, int] | None = None
 ) -> dict[str, Any]:

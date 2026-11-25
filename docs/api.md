@@ -44,6 +44,18 @@ Liveness check.
 
 ---
 
+## GET /api/v1/reverse-geocode?lat={lat}&lon={lon}
+
+Town or city name for a coordinate (used after "Use my current location"). Coordinates are
+rounded to 2 decimals (~1 km) before the lookup. 404 `location_not_found` if no named place.
+
+```json
+{ "name": "Lucknow", "country": "India", "admin1": "Uttar Pradesh",
+  "latitude": 26.85, "longitude": 80.95, "timezone": "UTC" }
+```
+
+---
+
 ## GET /api/v1/air?lat={lat}&lon={lon}
 
 Current reading + next 24 h forecast.

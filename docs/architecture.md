@@ -57,7 +57,7 @@ app/
     audience.py          # do/avoid tips for children, adults, sensitive people, pregnancy
   services/
     air_quality.py       # Open-Meteo client
-    geocoding.py         # Open-Meteo geocoding client
+    geocoding.py         # Open-Meteo name search + OpenStreetMap Nominatim reverse lookup
     gemini.py            # Gemini wrapper: schema validation, number guard, timeout
     prompts.py           # versioned prompt constants (PLAN_SYSTEM_PROMPT_V2, CHAT_SYSTEM_PROMPT_V2)
     chat.py              # scoped follow-up chat with fallback

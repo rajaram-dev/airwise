@@ -18,7 +18,7 @@
 | **XSS** | Frontend never uses `innerHTML` with dynamic data; only `textContent` and `createElement`. Strict CSP blocks inline scripts. |
 | **Prompt injection** | User chat text delimited and marked untrusted; system instruction takes priority; output limited to provided ids; number guard; 500-char limit. See [ai-design.md](ai-design.md#5-guardrails-summary). |
 | **API abuse / quota drain** | Per-IP rate limits (`slowapi`): plan 10/min, chat 20/min, others 60/min. Max request body 16 KB. Token caps on Gemini calls. |
-| **SSRF** | Outbound calls only to fixed hostnames (Open-Meteo, Gemini). User input never becomes a URL host; query params URL-encoded by httpx. |
+| **SSRF** | Outbound calls only to fixed hostnames (Open-Meteo, OpenStreetMap Nominatim, Gemini). User input never becomes a URL host; query params URL-encoded by httpx. |
 | **Information disclosure** | Generic error messages; stack traces only in server logs; `/docs` can be disabled in prod via env. |
 | **Clickjacking** | `frame-ancestors 'none'` + `X-Frame-Options: DENY`. |
 | **Vulnerable dependencies** | Pinned versions in `requirements.txt`; `pip-audit` in CI; Dependabot alerts on GitHub. |

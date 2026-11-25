@@ -81,6 +81,28 @@ def test_geocode_validates_query(make_client: ClientFactory) -> None:
     assert response.json()["error"] == "validation_error"
 
 
+def test_reverse_geocode(make_client: ClientFactory, upstream: respx.MockRouter) -> None:
+    response = make_client().get("/api/v1/reverse-geocode", params={"lat": 26.8467, "lon": 80.9462})
+    assert response.status_code == 200
+    assert response.json()["name"] == "Lucknow"
+    sent = upstream.routes["reverse"].calls[0].request.url.params
+    assert sent["lat"] == "26.85"
+
+
+def test_reverse_geocode_not_found(make_client: ClientFactory, upstream: respx.MockRouter) -> None:
+    upstream.routes["reverse"].mock(return_value=httpx.Response(200, json={}))
+    response = make_client().get("/api/v1/reverse-geocode", params={"lat": 0, "lon": 0})
+    assert response.status_code == 404
+    assert response.json()["error"] == "location_not_found"
+
+
+def test_reverse_geocode_validates(make_client: ClientFactory) -> None:
+    assert (
+        make_client().get("/api/v1/reverse-geocode", params={"lat": 95, "lon": 0}).status_code
+        == 422
+    )
+
+
 # ---------- air ----------
 
 

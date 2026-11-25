@@ -55,6 +55,16 @@ export function geocode(query) {
 }
 
 /**
+ * Name of the town or city at a coordinate.
+ * @param {number} lat
+ * @param {number} lon
+ * @returns {Promise<{name: string, admin1: string, country: string}>}
+ */
+export function reverseGeocode(lat, lon) {
+  return request(`/reverse-geocode?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`);
+}
+
+/**
  * Current air and forecast for a coordinate.
  * @param {number} lat
  * @param {number} lon

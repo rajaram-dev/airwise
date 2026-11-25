@@ -15,10 +15,10 @@ from app.services import air_quality, geocoding
 from app.services.air_quality import AirQualityClient
 from app.services.chat import ChatService
 from app.services.gemini import TextGenerator
-from app.services.geocoding import GeocodingClient
+from app.services.geocoding import GeocodingClient, ReverseGeocodingClient
 from app.services.plan_builder import PlanBuilder
 from tests.factories import NOW
-from tests.payloads import GEOCODE_PAYLOAD, air_payload
+from tests.payloads import GEOCODE_PAYLOAD, REVERSE_PAYLOAD, air_payload
 
 ClientFactory = Callable[..., TestClient]
 
@@ -42,6 +42,9 @@ def upstream() -> Iterator[respx.MockRouter]:
         router.get(geocoding.BASE_URL, name="geo").mock(
             return_value=httpx.Response(200, json=GEOCODE_PAYLOAD)
         )
+        router.get(geocoding.REVERSE_URL, name="reverse").mock(
+            return_value=httpx.Response(200, json=REVERSE_PAYLOAD)
+        )
         yield router
 
 
@@ -56,6 +59,7 @@ def make_client(upstream: respx.MockRouter) -> Iterator[ClientFactory]:
         services = Services(
             air=air,
             geocoder=GeocodingClient(http, TTLCache(maxsize=8, ttl=600)),
+            reverse_geocoder=ReverseGeocodingClient(http, TTLCache(maxsize=8, ttl=600)),
             plans=PlanBuilder(air, generator, clock=fixed_clock),
             chat=ChatService(generator),
         )

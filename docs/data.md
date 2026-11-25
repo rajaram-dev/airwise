@@ -9,6 +9,7 @@
 |---|---|---|---|
 | Open-Meteo Air Quality | `https://air-quality-api.open-meteo.com/v1/air-quality` | None | Current + hourly AQI, PM2.5, PM10, NO₂, O₃ |
 | Open-Meteo Geocoding | `https://geocoding-api.open-meteo.com/v1/search` | None | City name → lat/lon, timezone |
+| OpenStreetMap Nominatim | `https://nominatim.openstreetmap.org/reverse` | None | Rounded lat/lon → town or city name (after "Use my current location") |
 | Google Gemini | `google-genai` SDK | API key (server only) | Plan wording, chat |
 | Recommendation catalogue | `app/rules/catalog.py` | — | Static recommendation data + impact factors |
 
@@ -98,6 +99,9 @@ locations.
 
 - No accounts, no cookies, no analytics, no server-side storage of profiles or chat.
 - Logs never contain profile fields, coordinates beyond 1 decimal, or chat text.
+- Reverse geocoding: only coordinates rounded to ~1 km are sent, from our server (not the browser),
+  cached for 24 h to respect Nominatim's usage policy. Place names © OpenStreetMap contributors (ODbL),
+  credited in the footer.
 - Data sent to Gemini: compact profile flags + selected recommendations + user's chat message.
   No names, no exact coordinates. This is stated in the UI footer.
 

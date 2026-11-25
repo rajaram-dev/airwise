@@ -10,7 +10,7 @@ from app.config import Settings
 from app.services.air_quality import AirQualityClient
 from app.services.chat import ChatService
 from app.services.gemini import GeminiGenerator, TextGenerator
-from app.services.geocoding import GeocodingClient
+from app.services.geocoding import GeocodingClient, ReverseGeocodingClient
 from app.services.plan_builder import PlanBuilder
 
 AIR_CACHE_SIZE = 512
@@ -24,6 +24,7 @@ class Services:
 
     air: AirQualityClient
     geocoder: GeocodingClient
+    reverse_geocoder: ReverseGeocodingClient
     plans: PlanBuilder
     chat: ChatService
 
@@ -40,6 +41,9 @@ def build_services(settings: Settings, http: AsyncClient) -> Services:
     return Services(
         air=air,
         geocoder=GeocodingClient(http, TTLCache(maxsize=GEO_CACHE_SIZE, ttl=GEO_CACHE_TTL_SECONDS)),
+        reverse_geocoder=ReverseGeocodingClient(
+            http, TTLCache(maxsize=GEO_CACHE_SIZE, ttl=GEO_CACHE_TTL_SECONDS)
+        ),
         plans=PlanBuilder(air, generator),
         chat=ChatService(generator),
     )

@@ -4,7 +4,7 @@
  * @module search
  */
 
-import { geocode } from './api.js';
+import { geocode, reverseGeocode } from './api.js';
 import { byId, el } from './utils/dom.js';
 import { geoErrorMessage, placeLabel, roundCoord } from './utils/geo.js';
 import { icon } from './utils/icons.js';
@@ -12,11 +12,27 @@ import { icon } from './utils/icons.js';
 const DEBOUNCE_MS = 300;
 const MIN_CHARS = 2;
 const GEO_OPTIONS = Object.freeze({ timeout: 10000, maximumAge: 600000 });
+const FALLBACK_NAME = 'Your location';
 
 /**
  * @typedef {{name: string, latitude: number, longitude: number}} Location
  * @typedef {(busyText: string, task: () => Promise<void>) => Promise<void>} RunTask
  */
+
+/**
+ * Look up the town or city name; fall back to a generic label if the lookup fails.
+ * @param {number} latitude
+ * @param {number} longitude
+ * @returns {Promise<string>}
+ */
+async function placeName(latitude, longitude) {
+  try {
+    const place = await reverseGeocode(latitude, longitude);
+    return place.name || FALLBACK_NAME;
+  } catch {
+    return FALLBACK_NAME;
+  }
+}
 
 /** @returns {Promise<GeolocationPosition>} */
 function currentPosition() {
@@ -59,11 +75,11 @@ export function initSearch({ onChoose, run }) {
     try {
       await run('Finding your location…', async () => {
         const position = await currentPosition();
-        await onChoose({
-          name: 'Your location',
-          latitude: roundCoord(position.coords.latitude),
-          longitude: roundCoord(position.coords.longitude),
-        });
+        const latitude = roundCoord(position.coords.latitude);
+        const longitude = roundCoord(position.coords.longitude);
+        const name = await placeName(latitude, longitude);
+        if (name !== FALLBACK_NAME) input.value = name;
+        await onChoose({ name, latitude, longitude });
       });
     } finally {
       status.hidden = true;

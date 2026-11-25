@@ -66,7 +66,7 @@ The user gets:
 |---|---|
 | Backend | Python 3.11+, FastAPI, httpx, Pydantic v2 |
 | GenAI | Google Gemini API (`google-genai` SDK) |
-| Data | Open-Meteo Air Quality + Geocoding APIs |
+| Data | Open-Meteo Air Quality + Geocoding APIs; OpenStreetMap Nominatim for place names |
 | Frontend | Vanilla HTML, CSS, JavaScript (ES modules) — no build step |
 | Testing | pytest, respx, Node built-in test runner |
 | Quality | ruff, mypy, pip-audit, GitHub Actions |
