@@ -44,6 +44,7 @@ core feature, not polish.
 | Forecast chart | `role="img"` with a generated text summary (range and cleanest window); title states the window in words |
 | Household panel | Toggled by the profile chip (`aria-expanded`, `aria-controls`); focus moves to the panel heading |
 | Chat | `role="log"`, labelled input, send button with text |
+| Ask AirWise button | Visible text label (not icon-only); moves keyboard focus into the chat input; respects `prefers-reduced-motion` |
 | AQI number | `aria-label="Air quality index 287, Very Unhealthy"` |
 
 ## 3. Checklist (run for every UI change)

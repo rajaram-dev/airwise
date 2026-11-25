@@ -229,6 +229,11 @@
         <p class="muted">Rules decide · AI explains</p>
       </div>
       <p id="plan-summary" class="plan__summary"></p>
+      <p class="ask-hint">
+        <button type="button" class="link-btn" data-open-chat>
+          <span data-icon="message"></span> Have a question about today? Ask AirWise <span aria-hidden="true">↓</span>
+        </button>
+      </p>
       <ul id="plan-reasons" class="reasons" aria-label="Why this risk level"></ul>
 
       <ul id="audience-cards" class="audience-grid" aria-label="Advice for each person at home"></ul>
@@ -280,6 +285,11 @@
       </form>
     </section>
   </main>
+
+  <button id="chat-fab" type="button" class="chat-fab" data-open-chat hidden>
+    <span data-icon="message"></span>
+    <span>Ask AirWise</span>
+  </button>
 
   <footer class="footer container">
     <p>General wellbeing guidance, not medical advice · Data: <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0) · Wording: Google Gemini</p>

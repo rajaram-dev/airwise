@@ -4,7 +4,7 @@
  */
 
 import { geocode, getAir, getPlan } from './api.js';
-import { initChat, resetChat } from './chat.js';
+import { initChat, resetChat, updateChatButton } from './chat.js';
 import { personaliseHero, renderHero } from './render/air.js';
 import { renderChart } from './render/chart.js';
 import { fillAnswers, readAnswers, validateAnswers } from './render/form.js';
@@ -119,6 +119,7 @@ async function buildPlan() {
   renderPlan(plan);
   byId('plan-section').hidden = false;
   byId('chat-section').hidden = false;
+  updateChatButton();
   announce(`Your plan for ${plan.location.name} is ready.`);
 }
 
@@ -141,6 +142,7 @@ async function chooseLocation(location) {
   byId('dashboard').hidden = false;
   byId('plan-section').hidden = true;
   byId('chat-section').hidden = true;
+  updateChatButton();
   announce(`Air quality for ${location.name}: ${air.current.category_label}.`);
 
   if (state.answers) {

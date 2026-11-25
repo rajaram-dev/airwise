@@ -87,7 +87,8 @@ Text colours are chosen so every badge meets ≥ 4.5:1 contrast.
 | **Insights card** | vs yesterday, PM2.5 vs WHO guideline, main pollutant | Plain text |
 | **Outlook card** | Next-24-hour trend (improving / steady / worsening) | Bars are decorative; sentence carries the meaning |
 | **Action cards** | Daily routine and greener swaps, each with an impact line | `h4` titles |
-| **Chat** | Suggested questions, log with formatted replies (paragraphs, bullet lists, bold labels), pill input | `role="log"`, labelled input |
+| **Chat** | Suggested questions, log with formatted replies (paragraphs, bullet lists, bold labels), pill input |
+| **Ask AirWise button** | Floating pill (bottom-right) shown after a plan loads while the chat is off screen, plus an inline "Have a question about today?" link under the plan summary; both scroll to the chat and focus its input | Real `<button>` elements with visible text; hidden when the chat is on screen; smooth scroll only without reduced motion | `role="log"`, labelled input |
 
 ## 6. Layout
 

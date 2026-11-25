@@ -9,6 +9,10 @@ import { byId, el } from './utils/dom.js';
 import { parseReply } from './utils/markdown.js';
 
 const MAX_HISTORY = 6;
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+
+/** True while the chat section is on screen; drives the floating button. */
+let chatInView = false;
 const MAX_MESSAGE = 500;
 
 /** @param {Array<{text: string, bold: boolean}>} spans */
@@ -55,6 +59,18 @@ function planContext() {
   };
 }
 
+/** Show the floating "Ask AirWise" button only when the chat exists but is off screen. */
+export function updateChatButton() {
+  byId('chat-fab').hidden = byId('chat-section').hidden || chatInView;
+}
+
+/** Scroll to the chat and put the cursor in the question box. */
+export function openChat() {
+  const smooth = !window.matchMedia(REDUCED_MOTION).matches;
+  byId('chat-section').scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+  byId('chat-input').focus({ preventScroll: true });
+}
+
 /** Clear the conversation (called when a new plan is made). */
 export function resetChat() {
   state.history = [];
@@ -66,6 +82,17 @@ export function initChat() {
   const form = /** @type {HTMLFormElement} */ (byId('chat-form'));
   const input = /** @type {HTMLInputElement} */ (byId('chat-input'));
   const button = form.querySelector('button[type="submit"]');
+
+  for (const trigger of document.querySelectorAll('[data-open-chat]')) {
+    trigger.addEventListener('click', openChat);
+  }
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => {
+      chatInView = entry.isIntersecting;
+      updateChatButton();
+    }).observe(byId('chat-section'));
+  }
 
   for (const suggestion of document.querySelectorAll('.suggestion')) {
     suggestion.addEventListener('click', () => {
