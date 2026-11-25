@@ -40,7 +40,8 @@ core feature, not polish.
 
 | Component | Pattern |
 |---|---|
-| Location search | Search form; results are a list of buttons (simpler and fully keyboard/screen-reader friendly) |
+| Location search | Live suggestions as you type (debounced); results are buttons. Down/Up arrows move through them, Escape closes; input exposes `aria-expanded`/`aria-controls`. "Use my current location" is always the first option |
+| Locating | Visible "Finding your location…" banner plus a screen-reader announcement; clear message for each browser error (blocked, unavailable, timed out) |
 | Forecast chart | `role="img"` with a generated text summary (range and cleanest window); title states the window in words |
 | Household panel | Toggled by the profile chip (`aria-expanded`, `aria-controls`); focus moves to the panel heading |
 | Chat | `role="log"`, labelled input, send button with text |

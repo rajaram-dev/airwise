@@ -71,7 +71,7 @@ tests/
     conftest.py          # TestClient with mocked upstreams (respx)
     test_api.py          # all routes, security headers, rate limits, AI fallback
   frontend/
-    aqi.test.js  art.test.js  chart.test.js  format.test.js  markdown.test.js
+    aqi.test.js  art.test.js  chart.test.js  format.test.js  geo.test.js  markdown.test.js
 ```
 
 ## 5. Continuous integration

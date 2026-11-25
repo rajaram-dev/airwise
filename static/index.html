@@ -34,11 +34,12 @@
         <label for="city-input" class="visually-hidden">Search your city or town</label>
         <span class="search__icon" data-icon="search"></span>
         <input id="city-input" name="q" type="search" placeholder="Search your city"
-               autocomplete="address-level2" minlength="2" maxlength="100" required
-               aria-describedby="city-error">
+               autocomplete="off" minlength="2" maxlength="100" required
+               aria-expanded="false" aria-controls="search-results" aria-describedby="city-error search-hint">
+        <span id="search-hint" class="visually-hidden">Suggestions appear as you type. Press the down arrow to move through them.</span>
         <ul id="search-results" class="search__results" aria-label="Matching places" hidden></ul>
       </form>
-      <button id="geo-btn" type="button" class="icon-btn" aria-label="Use my current location">
+      <button id="geo-btn" type="button" class="icon-btn" aria-label="Use my current location" title="Use my current location">
         <span data-icon="pin"></span>
       </button>
       <p id="today-date" class="today-date"></p>
@@ -51,6 +52,10 @@
 
   <main id="main" class="container" tabindex="-1">
     <p id="city-error" class="field-error field-error--top" hidden></p>
+    <p id="locate-status" class="locate-status" hidden>
+      <span class="spinner" aria-hidden="true"></span>
+      Finding your location… Your browser may ask for permission.
+    </p>
     <div id="status" class="visually-hidden" role="status" aria-live="polite"></div>
     <div id="error" class="alert alert--error" role="alert" hidden></div>
 
@@ -59,6 +64,12 @@
       <div class="welcome__body">
         <h2 id="welcome-heading">What does today's air mean for your family?</h2>
         <p>Search your city above. AirWise checks live air quality, then builds a plan for your household with the impact of every choice.</p>
+        <div class="welcome__actions">
+          <button id="welcome-locate" type="button" class="btn btn--primary btn--pill">
+            <span data-icon="pin"></span> Use my current location
+          </button>
+          <span class="muted">or search for your city at the top</span>
+        </div>
         <ol class="welcome__steps">
           <li><strong>1</strong> Find your city</li>
           <li><strong>2</strong> Tell us about your home</li>

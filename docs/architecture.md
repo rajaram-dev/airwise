@@ -71,9 +71,9 @@ static/
   index.html
   img/  sky-*.webp · person-*.webp · branch.webp  (optimised illustrations)
   css/  tokens.css · base.css · components.css
-  js/   main.js · api.js · state.js · chat.js
+  js/   main.js · api.js · state.js · chat.js · search.js
         render/ air.js · chart.js · plan.js · form.js
-        utils/  aqi.js · art.js · chart.js · format.js · dom.js · icons.js · markdown.js
+        utils/  aqi.js · art.js · chart.js · format.js · dom.js · geo.js · icons.js · markdown.js
 tests/
   unit/         # rules/*, models
   integration/  # API routes with mocked services

@@ -79,7 +79,7 @@ Text colours are chosen so every badge meets ≥ 4.5:1 contrast.
 
 | Component | Description | Key a11y notes |
 |---|---|---|
-| **Top bar** | Logo, greeting ("Good evening, Raja Ram"), search with results dropdown, location button, date, "My family" chip | Greeting is the page `h1`; icon buttons have `aria-label`; chip has `aria-expanded` |
+| **Top bar** | Logo, greeting ("Good evening, Raja Ram"), search with live suggestions ("Use my current location" always first), location button, date, "My family" chip | Greeting is the page `h1`; icon buttons have `aria-label`; chip has `aria-expanded` |
 | **My family panel** | Optional name, household, commute, home, habits | Name stays on the device; `<fieldset>`/`<legend>` |
 | **Hero** | Skyline matched to the AQI, big AQI number + badge, verdict, PM2.5 / PM10 / NO₂ / O₃ tiles, 24-hour line chart | Chart is an SVG with a `<title>` summary; badge always has text |
 | **Audience cards** | For children / adults / sensitive people / during pregnancy (only groups at home), three do/avoid tips each, illustration | Tip type is announced ("Do:", "Avoid:"), never icon-only |

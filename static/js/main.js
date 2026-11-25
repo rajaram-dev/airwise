@@ -3,20 +3,19 @@
  * @module main
  */
 
-import { geocode, getAir, getPlan } from './api.js';
+import { getAir, getPlan } from './api.js';
 import { initChat, resetChat, updateChatButton } from './chat.js';
 import { personaliseHero, renderHero } from './render/air.js';
 import { renderChart } from './render/chart.js';
 import { fillAnswers, readAnswers, validateAnswers } from './render/form.js';
 import { renderPlan } from './render/plan.js';
+import { initSearch } from './search.js';
 import { forgetProfile, loadName, loadSavedProfile, saveName, saveProfile, state } from './state.js';
 import { upcomingHours } from './utils/chart.js';
 import { byId, el } from './utils/dom.js';
 import { cleanName, greetingFor, profileSummary } from './utils/format.js';
 import { hydrateIcons } from './utils/icons.js';
 
-const GEO_TIMEOUT_MS = 10000;
-const GEO_MAX_AGE_MS = 600000;
 
 const form = /** @type {HTMLFormElement} */ (byId('profile-form'));
 const panel = byId('profile-panel');
@@ -132,8 +131,6 @@ async function buildPlan() {
 async function chooseLocation(location) {
   state.location = location;
   state.plan = null;
-  byId('search-results').hidden = true;
-
   const air = await getAir(location.latitude, location.longitude);
   state.hours = upcomingHours(air.forecast, air.current.observed_at);
   renderHero(location.name, air.current);
@@ -151,79 +148,6 @@ async function chooseLocation(location) {
     setPanel(true);
     announce(`Air quality for ${location.name} loaded. Tell us about your household to get your plan.`);
   }
-}
-
-/** @param {Array<any>} results */
-function showResults(results) {
-  const list = byId('search-results');
-  list.replaceChildren(
-    ...results.map((place) => {
-      const label = [place.name, place.admin1, place.country].filter(Boolean).join(', ');
-      const button = el('button', { text: label, attrs: { type: 'button' } });
-      button.addEventListener('click', () =>
-        withBusy(null, `Getting live air data for ${place.name}…`, () =>
-          chooseLocation({ name: place.name, latitude: place.latitude, longitude: place.longitude }),
-        ),
-      );
-      return el('li', {}, [button]);
-    }),
-  );
-  list.hidden = false;
-  announce(`${results.length} places found. Choose one from the list.`);
-  list.querySelector('button')?.focus();
-}
-
-function initSearch() {
-  const searchForm = /** @type {HTMLFormElement} */ (byId('search-form'));
-  const input = /** @type {HTMLInputElement} */ (byId('city-input'));
-  const fieldError = byId('city-error');
-  const results = byId('search-results');
-
-  searchForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const query = input.value.trim();
-    const valid = query.length >= 2;
-    input.setAttribute('aria-invalid', String(!valid));
-    fieldError.hidden = valid;
-    fieldError.textContent = valid ? '' : 'Enter at least 2 letters of your city or town.';
-    if (!valid) {
-      input.focus();
-      return;
-    }
-    withBusy(null, 'Searching…', async () => {
-      const { results: places } = await geocode(query);
-      showResults(places);
-    });
-  });
-
-  searchForm.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !results.hidden) {
-      results.hidden = true;
-      input.focus();
-    }
-  });
-
-  const geoButton = /** @type {HTMLButtonElement} */ (byId('geo-btn'));
-  if (!('geolocation' in navigator)) {
-    geoButton.hidden = true;
-    return;
-  }
-  geoButton.addEventListener('click', () => {
-    withBusy(geoButton, 'Finding your location…', async () => {
-      const position = await new Promise((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          () => reject(new Error('We couldn\'t get your location. Search for your city instead.')),
-          { timeout: GEO_TIMEOUT_MS, maximumAge: GEO_MAX_AGE_MS },
-        ),
-      );
-      await chooseLocation({
-        name: 'Your location',
-        latitude: Math.round(position.coords.latitude * 100) / 100,
-        longitude: Math.round(position.coords.longitude * 100) / 100,
-      });
-    });
-  });
 }
 
 function initProfile() {
@@ -277,6 +201,10 @@ function initProfile() {
 }
 
 hydrateIcons();
-initSearch();
+const search = initSearch({
+  onChoose: chooseLocation,
+  run: (busyText, task) => withBusy(null, busyText, task),
+});
+byId('welcome-locate').addEventListener('click', () => search.locate());
 initProfile();
 initChat();
