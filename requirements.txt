@@ -1,0 +1,8 @@
+fastapi==0.165.0
+uvicorn[standard]==0.54.0
+httpx==0.28.1
+pydantic==2.14.4
+pydantic-settings==2.16.3
+google-genai==3.6.1
+slowapi==0.1.10
+cachetools==8.0.2
