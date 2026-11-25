@@ -35,36 +35,36 @@ Without a `GEMINI_API_KEY` the app still works in rule-based mode.
 | `RATE_LIMIT_CHAT` | No | `20/minute` | Chat rate limit per IP |
 | `LOG_LEVEL` | No | `INFO` | Log verbosity |
 
-## 4. Deploy to Render (free tier)
+## 4. Deploy to Render (free tier) — Blueprint
 
-1. Push the repo to GitHub (public, `main` only).
-2. Render → **New → Web Service** → connect the repo.
-3. Settings:
-   - Runtime: Python
-   - Build command: `pip install -r requirements.txt`
-   - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers`
-   - Health check path: `/api/v1/health`
-4. Add environment variables (above) in **Environment** — set `ALLOWED_ORIGINS` to the Render URL.
-5. Deploy and put the live URL in the README.
+All settings live in [`render.yaml`](../render.yaml), so deployment is a few clicks:
+
+1. Sign in at https://render.com with the GitHub account that owns the repo.
+2. **New → Blueprint** → choose the `airwise` repository → Render reads `render.yaml`.
+3. When asked, paste your Gemini key into **GEMINI_API_KEY** (marked `sync: false`, so it is
+   stored only in Render, never in the repo).
+4. Click **Apply / Deploy**. The first build takes a few minutes; Render checks
+   `/api/v1/health` before sending traffic.
+5. Open the `https://airwise-….onrender.com` URL and put it in the README.
+
+What the blueprint sets: Python 3.12, `pip install -r requirements.txt`, start command
+`uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers`, `FORWARDED_ALLOW_IPS=*`
+(trust Render's proxy so per-IP rate limits and HTTPS detection use the real client), health
+check, auto-deploy on every push to `main`.
+
+`ALLOWED_ORIGINS` does not need changing: the page and the API are served from the same origin.
 
 Note: free Render services sleep when idle; the first request can take ~30–60 s. Open the demo
 link once before recording the video or before judging windows.
 
 ## 5. Alternative: Docker (any host, e.g. Cloud Run, Railway)
 
-A `Dockerfile` will be added with the code:
+The repo includes a [`Dockerfile`](../Dockerfile) (Python 3.12 slim, non-root user, port from
+`$PORT`) and a `.dockerignore` that keeps `.env`, tests, docs and original images out of the image.
 
-```dockerfile
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY app ./app
-COPY static ./static
-RUN useradd --create-home appuser
-USER appuser
-ENV PORT=8080
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --proxy-headers"]
+```bash
+docker build -t airwise .
+docker run -p 8080:8080 -e GEMINI_API_KEY=your-key airwise
 ```
 
 ## 6. Submission checklist

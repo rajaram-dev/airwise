@@ -1,0 +1,32 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Deploys AirWise as a single free web service. The Gemini key is entered in the Render
+# dashboard (sync: false) and is never stored in this repository.
+services:
+  - type: web
+    name: airwise
+    runtime: python
+    plan: free
+    branch: main
+    autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    # --proxy-headers + FORWARDED_ALLOW_IPS: use the real client IP from Render's proxy
+    # (needed for per-IP rate limiting and HTTPS detection).
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: FORWARDED_ALLOW_IPS
+        value: "*"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: CACHE_TTL_SECONDS
+        value: "600"
+      - key: RATE_LIMIT_PLAN
+        value: 10/minute
+      - key: RATE_LIMIT_CHAT
+        value: 20/minute
+      - key: LOG_LEVEL
+        value: INFO
